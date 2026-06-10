@@ -1,209 +1,378 @@
 [
+ 
   {
-    "node": "01_FuelEngineLevel",
-    "title": "Fuel/Engine Level",
-    "camera": "Cam_01_FuelEngineLevel",
+    "node": "LOTO_E24",
+    "camera": "Cam_LOTO_E24",
     "type": "callout",
-    "description": "Before starting the vehicle, check the basic fluid levels to include fuel and engine oil. New model versions the oil is checked from the vehicle data center on the instrument panel."
+    "mode": "LOTO",
+    "step": 1,
+    "icon": "media/icon_E24.png",
+    "iconVisited": "media/icon_E24_visited.png",
+    "title": "Case Packer Main Electrical Disconnect",
+    "description": "<div class='hotspot-title'>Case Packer Main Electrical Disconnect</div><br><strong>Procedure:</strong>\nWhile standing clear of electrical disconnect, place switch in the OFF position. Apply safety lock and tag.\n\n<strong>Verify:</strong>\nAttempt to start equipment powered by this disconnect. The equipment must not start and no action should occur. Ensure zero voltage by testing with a voltmeter."
   },
   {
-    "node": "02_DeicingAntiIcingFluid",
-    "title": "Deicing/Anti-icing Fluid Level Verification",
-    "camera": "Cam_02_DeicingFluid",
+    "node": "LOTO_A20",
+    "camera": "Cam_LOTO_A20",
     "type": "callout",
-    "description": "Verify deicing and anti-icing fluid levels before leaving truck staging area. Fluid levels can be monitored throughout deicing operations using monitors inside of the deicing truck cab and basket."
+    "mode": "LOTO",
+    "step": 2,
+    "icon": "media/icon_A20.png",
+    "iconVisited": "media/icon_A20_visited.png",
+    "title": "Case Packer Main Air Supply Shutoff Valve",
+    "description": "<div class='hotspot-title'>Case Packer Main Air Supply Shutoff Valve</div><br><strong>Procedure:</strong>\nPlace air supply shutoff valve in the closed position. Apply safety lock and tag. Vent residual air pressure manually if not automatically vented.\n\n<strong>Verify:</strong>\nPressure gauge must move from operating pressure to 0. If no gauge is present, attempt to manually operate. Equipment must not operate."
   },
   {
-    "node": "03_GlycolFillPorts",
-    "title": "Glycol Fill Ports",
-    "camera": "Cam_03_GlycolFillPorts",
+    "node": "LOTO_CG",
+    "camera": "Cam_LOTO_CG",
     "type": "callout",
-    "description": "To avoid mixing deicing and anti-icing fluids in the truck tanks all United deicing equipment are equipped with different size and style valve fittings. The fittings are incompatible with each other. Whenever top loading fluids, always verify the correct tank is loaded with the correct fluid."
+    "mode": "LOTO",
+    "step": 3,
+    "icon": "media/icon_CG.png",
+    "iconVisited": "media/icon_CG_visited.png",
+    "title": "Control Vertical Axis of Fold Arm",
+    "description": "<div class='hotspot-title'>Control Vertical Axis of Fold Arm</div><br><strong>Procedure:</strong>\nPlace vertical axis of equipment into full bottom position or properly block.\n\n<strong>Verify:</strong>\nVisually confirm equipment is fully bottomed out or properly blocked and mechanical motion is eliminated."
   },
   {
-    "node": "04_WiperFluids",
-    "title": "Wiper Fluids",
-    "camera": "Cam_04_WiperFluids",
+    "node": "LOTO_CM",
+    "camera": "Cam_LOTO_CM",
     "type": "callout",
-    "description": "De/anti-icing fluids can adhere to windows, windshield and mirrors limiting visibility, so making sure all window wiper fluids are full before using the deicing vehicle is a critical part of the user check. Remember, if you cannot see due to any visual obstruction, steam, or adhering de/anti-icing fluids, stop the vehicle until conditions improve."
+    "mode": "LOTO",
+    "step": 4,
+    "icon": "media/icon_CM.png",
+    "iconVisited": "media/icon_CM_visited.png",
+    "title": "Control/Release Mechanical Motion of Fold Shuttle",
+    "description": "<div class='hotspot-title'>Control/Release Mechanical Motion of Fold Shuttle</div><br><strong>Procedure:</strong>\nClamp, block or secure horizontal movement of equipment.\n\n<strong>Verify:</strong>\nVisually confirm equipment is properly clamped, blocked or secured and mechanical motion is eliminated."
   },
   {
-    "node": "05_BoomControls",
-    "title": "Boom Controls",
-    "camera": "Cam_05_BoomControls",
+    "node": "LOTO_DT_Nozzles",
+    "camera": "Cam_LOTO_DT_Nozzles",
     "type": "callout",
-    "description": "The basket can be controlled from the outside of the vehicle and from inside the deicing cab. The Vestergaard Beta has three separate booms, including a telescoping nozzle, that reach a total height of 63 feet (models may vary). The instruction on how to activate these booms is part of the deicing operator's training."
+    "mode": "LOTO",
+    "step": 5,
+    "icon": "media/icon_DT.png",
+    "iconVisited": "media/icon_DT_visited.png",
+    "title": "Dissipate Thermal Condition at Glue Nozzles",
+    "description": "<div class='hotspot-title'>Dissipate Thermal Condition at Glue Nozzles</div><br><strong>Procedure:</strong>\nWait until equipment returns to ambient temperature or use proper PPE.\n\n<strong>Verify:</strong>\nUse temperature sensing device to ensure equipment has returned to ambient temperature."
   },
   {
-    "node": "06_Communication",
-    "title": "Communication",
-    "camera": "Cam_06_Communication",
+    "node": "LOTO_DT_GlueUnit",
+    "camera": "Cam_LOTO_DT_GlueUnit",
     "type": "callout",
-    "description": "While operating the basket, you must establish and maintain positive communication with the vehicle driver. If using single man operations, a communication link must be established and maintained with personnel outside of the vehicle."
+    "mode": "LOTO",
+    "step": 6,
+    "icon": "media/icon_DT.png",
+    "iconVisited": "media/icon_DT_visited.png",
+    "title": "Dissipate Thermal Condition at Hot Melt Glue Unit",
+    "description": "<div class='hotspot-title'>Dissipate Thermal Condition at Hot Melt Glue Unit</div><br><strong>Procedure:</strong>\nWait until equipment returns to ambient temperature or use proper PPE.\n\n<strong>Verify:</strong>\nUse temperature sensing device to ensure equipment has returned to ambient temperature."
   },
   {
-    "node": "07_GroundGuns",
-    "title": "Ground Guns",
-    "camera": "Cam_07_GroundGuns",
+    "node": "LOTO_E24_1",
+    "camera": "Cam_LOTO_E24_1",
     "type": "callout",
-    "description": "The ground guns on the Elephant Beta are manually operated spray nozzles mounted on heated, flexible hoses stored in a side or rear cabinet. Designed for precision work, they’re ideal for treating landing gear, engine inlets, and hard-to-reach areas where boom access is limited. The hoses typically range from 10 to 15 meters and maintain fluid temperature for effective application in cold conditions. Operators can adjust spray pattern and, on newer models, select between Type I and Type IV fluids before spraying."
+    "mode": "LOTO",
+    "icon": "media/icon_E24_1.png",
+    "iconVisited": "media/icon_E24_1_visited.png",
+    "title": "Service Electrical Disconnect",
+    "description": "<div class='hotspot-title'>Service Electrical Disconnect</div><br><strong>Procedure:</strong>\nWhile standing clear of the electrical box, place the disconnect switch in the OFF position. Apply a safety lock and tag.\n\n<strong>Verify:</strong>\nAttempt to start the equipment and verify that no action occurs. Ensure zero voltage by testing with a voltmeter."
   },
   {
-    "node": "08_EmergencyStops",
-    "title": "Emergency Stops (E-Stop)",
-    "camera": "Cam_08_EmergencyStops",
+    "node": "LOTO_E24_2",
+    "camera": "Cam_LOTO_E24_2",
     "type": "callout",
-    "description": "In an emergency requiring immediate termination of all boom movement, fluid pumping and operational drive: The location of all emergency stop switches for the local station equipment will be trained in the equipment operator training."
+    "mode": "LOTO",
+    "icon": "media/icon_E24_2.png",
+    "iconVisited": "media/icon_E24_2_visited.png",
+    "title": "Case Coder Electrical Disconnect",
+    "description": "<div class='hotspot-title'>Case Coder Electrical Disconnect</div><br><strong>Procedure:</strong>\nRemove the plug from the receptacle. Install a plug lockout device and apply a safety lock and tag.\n\n<strong>Verify:</strong>\nAttempt to start equipment powered by this plug and verify that no action occurs. Ensure zero voltage before servicing."
   },
   {
-    "node": "09_DeicingAccessPort",
-    "title": "Deicing (Type I) Access Port",
-    "camera": "Cam_09_DeicingAccessPort",
+    "node": "LOTO_E24_3",
+    "camera": "Cam_LOTO_E24_3",
     "type": "callout",
-    "description": "This access port is used to extract or test the deicing fluid (Type I) mixture. The port location varies by model and is typically found on the body of the vehicle. Operators must ensure proper PPE is worn, as the fluid may be hot and pressurized."
+    "mode": "LOTO",
+    "icon": "media/icon_E24_3.png",
+    "iconVisited": "media/icon_E24_3_visited.png",
+    "title": "Exit Conveyor Electrical Disconnect",
+    "description": "<div class='hotspot-title'>Exit Conveyor Electrical Disconnect</div><br><strong>Procedure:</strong>\nWhile standing clear of the electrical box, place the disconnect switch in the OFF position. Apply a safety lock and tag.\n\n<strong>Verify:</strong>\nAttempt to start the equipment and verify that no action occurs. Ensure zero voltage by testing with a voltmeter."
   },
   {
-    "node": "10_AntiIcingAccessPort",
-    "title": "Anti-Icing (Type IV) Access Port",
-    "camera": "Cam_10_AntiIcingAccessPort",
+    "node": "Hzrd_01_BurnHazard_1",
+    "camera": "Cam_Hzrd_01_BurnHazard_1",
     "type": "callout",
-    "description": "Used to sample or verify the anti-icing (Type IV) fluid, this access point ensures the fluid is within the correct specification before being applied. Always confirm the port location based on the specific Beta model in use."
+    "mode": "safety",
+    "icon": "media/icon_BurnHazard.png",
+    "title": "Burn Hazard",
+    "description": "<div class='hazard-header'><img src='media/icon_BurnHazard.png' class='hazard-icon'><div><div class='hazard-title'>Burn hazard:<br>Glue Machine/Nozzle</div><br>The glue nozzle is hot.<br><br><strong>You must wear PPE if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_Gloves.png' class='ppe-icon'> Heat-resistant gloves<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
   },
   {
-    "node": "11_DeicingFluidPlacard",
-    "title": "Deicing Fluid Placard",
-    "camera": "Cam_11_DeicingFluidPlacard",
+    "node": "Hzrd_01_BurnHazard_2",
+    "camera": "Cam_Hzrd_01_BurnHazard_2",
     "type": "callout",
-    "description": "Each deicing fluid tank is clearly labeled with a placard identifying it as Type I fluid. This helps prevent cross-contamination and ensures the correct fluid is applied during operations. Always verify placards match the fluid being filled or used."
+    "mode": "safety",
+    "icon": "media/icon_BurnHazard.png",
+    "title": "Burn Hazard",
+    "description": "<div class='hazard-header'><img src='media/icon_BurnHazard.png' class='hazard-icon'><div><div class='hazard-title'>Burn hazard:<br>Glue Machine/Nozzle</div><br>The glue nozzle is hot.<br><br><strong>You must wear PPE if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_Gloves.png' class='ppe-icon'> Heat-resistant gloves<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
   },
   {
-    "node": "12_AntiIceFluidPlacard",
-    "title": "Anti-Ice Fluid Placard",
-    "camera": "Cam_12_AntiIceFluidPlacard",
+    "node": "Hzrd_02_MovingConveyor_1",
+    "camera": "Cam_Hzrd_02_MovingConveyor_1",
     "type": "callout",
-    "description": "Anti-icing fluid tanks are marked with a distinct Type IV placard. Proper identification is critical during fluid loading and application. Operators must confirm all placards are present, legible, and match the corresponding tank contents."
+    "mode": "safety",
+    "icon": "media/icon_MovingConveyor.png",
+    "title": "Moving Conveyor",
+    "description": "<div class='hazard-header'><img src='media/icon_MovingConveyor.png' class='hazard-icon'><div><div class='hazard-title'>Moving Conveyor:<br>Roller and Belt Conveyors</div><br>The conveyor is in motion when powered.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
   },
   {
-    "node": "13_TelescopingNozzle",
-    "title": "Telescoping Nozzle",
-    "camera": "Cam_13_TelescopingNozzle",
+    "node": "Hzrd_02_MovingConveyor_2",
+    "camera": "Cam_Hzrd_02_MovingConveyor_2",
     "type": "callout",
-    "description": "The Vestergaard Beta features a telescoping spray nozzle integrated into the boom system. This design allows the operator to maintain a close and controlled distance from the aircraft surface, enhancing spray precision and reducing fluid waste. The nozzle can extend as part of the boom’s reach up to 63 feet."
+    "mode": "safety",
+    "icon": "media/icon_MovingConveyor.png",
+    "title": "Moving Conveyor",
+    "description": "<div class='hazard-header'><img src='media/icon_MovingConveyor.png' class='hazard-icon'><div><div class='hazard-title'>Moving Conveyor:<br>Roller and Belt Conveyors</div><br>The conveyor is in motion when powered.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
   },
   {
-    "node": "14_BoomSystem",
-    "title": "Boom System",
-    "camera": "Cam_14_BoomSystem",
+    "node": "Hzrd_02_MovingConveyor_3",
+    "camera": "Cam_Hzrd_02_MovingConveyor_3",
     "type": "callout",
-    "description": "The Vestergaard Beta is equipped with a three-part boom system, including a telescoping center section. It provides a maximum nozzle height of up to 63 feet (model dependent), allowing operators to access high and hard-to-reach areas of the aircraft safely and efficiently."
+    "mode": "safety",
+    "icon": "media/icon_MovingConveyor.png",
+    "title": "Moving Conveyor",
+    "description": "<div class='hazard-header'><img src='media/icon_MovingConveyor.png' class='hazard-icon'><div><div class='hazard-title'>Moving Conveyor:<br>Roller and Belt Conveyors</div><br>The conveyor is in motion when powered.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
   },
   {
-    "node": "Cam_15_BasketView",
-    "title": "Operators Cabin",
-    "camera": "Cam_15_BasketView",
-    "type": "camera"
-  },
-  {
-    "node": "Cam_16_CabinView",
-    "title": "Chassis Cabin",
-    "camera": "Cam_16_CabinView",
-    "type": "camera"
-  },
-  {
-    "node": "Cam_17_ExteriorView",
-    "title": "Exterior",
-    "camera": "Cam_17_ExteriorView",
-    "type": "camera"
-  },
-  {
-    "node": "18_BoomContrlF1",
-    "title": "F1",
-    "camera": "Cam_18_BoomContrlF1",
+    "node": "Hzrd_02_MovingConveyor_4",
+    "camera": "Cam_Hzrd_02_MovingConveyor_4",
     "type": "callout",
-    "description": "Often activates spray preset 1 (e.g., Type I fluid at a defined temperature and pressure)."
+    "mode": "safety",
+    "icon": "media/icon_MovingConveyor.png",
+    "title": "Moving Conveyor",
+    "description": "<div class='hazard-header'><img src='media/icon_MovingConveyor.png' class='hazard-icon'><div><div class='hazard-title'>Moving Conveyor:<br>Roller and Belt Conveyors</div><br>The conveyor is in motion when powered.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
   },
   {
-    "node": "19_BoomContrlF2",
-    "title": "F2",
-    "camera": "Cam_19_BoomContrlF2",
+    "node": "Hzrd_03_PinchPoint_1",
+    "camera": "Cam_Hzrd_03_PinchPoint_1",
     "type": "callout",
-    "description": "Usually toggles spray preset 2 (e.g., switching to Type IV fluid or changing spray pattern)."
+    "mode": "safety",
+    "icon": "media/icon_PinchPoint.png",
+    "title": "Pinch Point",
+    "description": "<div class='hazard-header'><img src='media/icon_PinchPoint.png' class='hazard-icon'><div><div class='hazard-title'>Pinch Point:<br>Roller and Belt Conveyors</div><br>There are pinch points at the roller ends of the conveyor.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
   },
   {
-    "node": "20_BoomContrlF3",
-    "title": "F3",
-    "camera": "Cam_20_BoomContrlF3",
+    "node": "Hzrd_03_PinchPoint_2",
+    "camera": "Cam_Hzrd_03_PinchPoint_2",
     "type": "callout",
-    "description": "Can be user-programmable, but is sometimes mapped to things like boom auto-stow, wiper spray, or intercom toggle."
-   },
+    "mode": "safety",
+    "icon": "media/icon_PinchPoint.png",
+    "title": "Pinch Point",
+    "description": "<div class='hazard-header'><img src='media/icon_PinchPoint.png' class='hazard-icon'><div><div class='hazard-title'>Pinch Point:<br>Roller and Belt Conveyors</div><br>There are pinch points at the roller ends of the conveyor.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
+  },
   {
-    "node": "21_HMIdisplay",
-    "title": "HMI Display",
-    "camera": "Cam_21_HMIdisplay",
+    "node": "Hzrd_03_PinchPoint_3",
+    "camera": "Cam_Hzrd_03_PinchPoint_3",
     "type": "callout",
-     "description": "HMI display (a Human‑Machine Interface) which is tied to the basket’s control system. Here’s what it does:\n\n•  Operational Feedback: Shows system status—hydraulic pressure, fluid mix, temperature, and alerts.\n\n• Mode Transitions: Lets you shift between standard modes (spray, stow, service) and shows prompts—like when a keypad override is needed.\n\n• Diagnostics & Alarms: Displays error codes or warnings, especially during or after an E‑stop event, and triggers the keypad reset to continue."
- },
- {
-   "node": "22_Maintenance&OverrideAccess",
-   "title": "Maintenance & Override Access",
-   "camera": "Cam_22_Maintenance&OverrideAccess",
-   "type": "callout",
-   "description": "Authorized users (maintenance, techs, supervisors) can dial in a service code that temporarily unlocks restricted functions—like basket lowering, limited boom movement, or accessing diagnostics—while staying within safety limits."
- },
- {
-   "node": "23_SafetyModeActivation(Optional)",
-   "title": "Safety Mode Activation (Optional)",
-   "camera": "Cam_23_SafetyModeActivation(Optional)",
-   "type": "callout",
-   "description": "Some setups use the keypad to engage a \"restricted speed mode\" or to disable certain presets (like F‑buttons) until confirmed safe."
- },
- {
-   "node": "24_LockoutControl",
-   "title": "Lockout Control",
-   "camera": "Cam_24_LockoutControl",
-   "type": "callout",
-   "description": "When the basket is unoccupied, the keypad can lock control inputs, preventing accidental activation. Only someone with the code can unlock and operate the boom again."
- },
- {
-   "node": "25_HeadsetVolume",
-   "title": "Headset Voulme (Left & Right)",
-   "camera": "Cam_25_HeadsetVolume",
-   "type": "callout",
-   "description": "Adjusts volume individually for the left and right operator headsets — useful in dual-operator or training setups."
- },
- {
-   "node": "26_SystemVolume",
-   "title": "System Volume",
-   "camera": "Cam_26_SystemVolume",
-   "type": "callout",
-   "description": "Controls the overall system speaker volume (e.g., warnings, internal radio chatter)."
- },
- {
-   "node": "27_ToggleSwitch",
-   "title": "Toggle Switch (On/Off)",
-   "camera": "Cam_27_ToggleSwitch",
-   "type": "callout",
-   "description": "Powers the intercom system on or off — usually tied to ignition or cabin accessory power."
- },
- {
-   "node": "28_RoundKnob",
-   "title": "Round Knob",
-   "camera": "Cam_28_RoundKnob",
-   "type": "callout",
-   "description": "Sometimes a master gain or mic sensitivity adjustment (depending on model — could also be push-to-test for the audio line)."
- },
- {
-  "node": "29_EmergencyStop",
-  "title": "Emergency Stop (E‑Stop)",
-  "camera": "Cam_29_EmergencyStop",
-  "type": "callout",
-  "description": "The top red button is the emergency stop, designed for instant shutdown of hydraulic power and pump systems from the ground. It’s a large, mushroom-style pushbutton that immediately halts operations in critical situations."
-},
-{
-  "node": "30_SystemRestartReset",
-  "title": "System Restart/Reset",
-  "camera": "Cam_30_SystemRestartReset",
-  "type": "callout",
-  "description": "The button underneath is the system reset, often referred to as a restart or acknowledge button. After the top E‑stop is activated, this button must be pressed to reset the emergency circuit—sometimes followed by compliance steps before normal operations resume."
-}
+    "mode": "safety",
+    "icon": "media/icon_PinchPoint.png",
+    "title": "Pinch Point",
+    "description": "<div class='hazard-header'><img src='media/icon_PinchPoint.png' class='hazard-icon'><div><div class='hazard-title'>Pinch Point:<br>Roller and Belt Conveyors</div><br>There are pinch points at the roller ends of the conveyor.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
+  },
+  {
+    "node": "Hzrd_03_PinchPoint_4",
+    "camera": "Cam_Hzrd_03_PinchPoint_4",
+    "type": "callout",
+    "mode": "safety",
+    "icon": "media/icon_PinchPoint.png",
+    "title": "Pinch Point",
+    "description": "<div class='hazard-header'><img src='media/icon_PinchPoint.png' class='hazard-icon'><div><div class='hazard-title'>Pinch Point:<br>Roller and Belt Conveyors</div><br>There are pinch points at the roller ends of the conveyor.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
+  },
+  {
+    "node": "Hzrd_03_PinchPoint_5",
+    "camera": "Cam_Hzrd_03_PinchPoint_5",
+    "type": "callout",
+    "mode": "safety",
+    "icon": "media/icon_PinchPoint.png",
+    "title": "Pinch Point",
+    "description": "<div class='hazard-header'><img src='media/icon_PinchPoint.png' class='hazard-icon'><div><div class='hazard-title'>Pinch Point:<br>Roller and Belt Conveyors</div><br>There are pinch points at the roller ends of the conveyor.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
+  },
+  {
+    "node": "Hzrd_03_PinchPoint_6",
+    "camera": "Cam_Hzrd_03_PinchPoint_6",
+    "type": "callout",
+    "mode": "safety",
+    "icon": "media/icon_PinchPoint.png",
+    "title": "Pinch Point",
+    "description": "<div class='hazard-header'><img src='media/icon_PinchPoint.png' class='hazard-icon'><div><div class='hazard-title'>Pinch Point:<br>Roller and Belt Conveyors</div><br>There are pinch points at the roller ends of the conveyor.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
+  },
+  {
+    "node": "Hzrd_03_PinchPoint_7",
+    "camera": "Cam_Hzrd_03_PinchPoint_7",
+    "type": "callout",
+    "mode": "safety",
+    "icon": "media/icon_PinchPoint.png",
+    "title": "Pinch Point",
+    "description": "<div class='hazard-header'><img src='media/icon_PinchPoint.png' class='hazard-icon'><div><div class='hazard-title'>Pinch Point:<br>Roller and Belt Conveyors</div><br>There are pinch points at the roller ends of the conveyor.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
+  },
+  {
+    "node": "Hzrd_04_HandDanger_1",
+    "camera": "Cam_Hzrd_04_HandDanger_1",
+    "type": "callout",
+    "mode": "safety",
+    "icon": "media/icon_HandDanger.png",
+    "title": "Hand Danger",
+    "description": "<div class='hazard-header'><img src='media/icon_HandDanger.png' class='hazard-icon'><div><div class='hazard-title'>Hand Danger:<br>Gears, Arms, and Conveyors</div><br>The plastic guards can present hand danger.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
+  },
+  {
+    "node": "Hzrd_04_HandDanger_2",
+    "camera": "Cam_Hzrd_04_HandDanger_2",
+    "type": "callout",
+    "mode": "safety",
+    "icon": "media/icon_HandDanger.png",
+    "title": "Hand Danger",
+    "description": "<div class='hazard-header'><img src='media/icon_HandDanger.png' class='hazard-icon'><div><div class='hazard-title'>Hand Danger:<br>Gears, Arms, and Conveyors</div><br>The plastic guards can present hand danger.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
+  },
+  {
+    "node": "Hzrd_04_HandDanger_3",
+    "camera": "Cam_Hzrd_04_HandDanger_3",
+    "type": "callout",
+    "mode": "safety",
+    "icon": "media/icon_HandDanger.png",
+    "title": "Hand Danger",
+    "description": "<div class='hazard-header'><img src='media/icon_HandDanger.png' class='hazard-icon'><div><div class='hazard-title'>Hand Danger:<br>Gears, Arms, and Conveyors</div><br>The plastic guards can present hand danger.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
+  },
+  {
+    "node": "Hzrd_04_HandDanger_4",
+    "camera": "Cam_Hzrd_04_HandDanger_4",
+    "type": "callout",
+    "mode": "safety",
+    "icon": "media/icon_HandDanger.png",
+    "title": "Hand Danger",
+    "description": "<div class='hazard-header'><img src='media/icon_HandDanger.png' class='hazard-icon'><div><div class='hazard-title'>Hand Danger:<br>Gears, Arms, and Conveyors</div><br>The plastic guards can present hand danger.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
+  },
+  {
+    "node": "Hzrd_04_HandDanger_5",
+    "camera": "Cam_Hzrd_04_HandDanger_5",
+    "type": "callout",
+    "mode": "safety",
+    "icon": "media/icon_HandDanger.png",
+    "title": "Hand Danger",
+    "description": "<div class='hazard-header'><img src='media/icon_HandDanger.png' class='hazard-icon'><div><div class='hazard-title'>Hand Danger:<br>Gears, Arms, and Conveyors</div><br>The plastic guards can present hand danger.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
+  },
+  {
+    "node": "Hzrd_05_CompressedAir_1",
+    "camera": "Cam_Hzrd_05_CompressedAir_1",
+    "type": "callout",
+    "mode": "safety",
+    "icon": "media/icon_CompressedAir.png",
+    "title": "Compressed Air",
+    "description": "<div class='hazard-header'><img src='media/icon_CompressedAir.png' class='hazard-icon'><div><div class='hazard-title'>Compressed Air:<br>Ball Valve and Compressed Air Lines</div><br>Compressed air creates force while releasing from the ball valve.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
+  },
+  {
+    "node": "Hzrd_05_CompressedAir_2",
+    "camera": "Cam_Hzrd_05_CompressedAir_2",
+    "type": "callout",
+    "mode": "safety",
+    "icon": "media/icon_CompressedAir.png",
+    "title": "Compressed Air",
+    "description": "<div class='hazard-header'><img src='media/icon_CompressedAir.png' class='hazard-icon'><div><div class='hazard-title'>Compressed Air:<br>Ball Valve and Compressed Air Lines</div><br>Compressed air creates force while releasing from the ball valve.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
+  },
+  {
+    "node": "Hzrd_05_CompressedAir_3",
+    "camera": "Cam_Hzrd_05_CompressedAir_3",
+    "type": "callout",
+    "mode": "safety",
+    "icon": "media/icon_CompressedAir.png",
+    "title": "Compressed Air",
+    "description": "<div class='hazard-header'><img src='media/icon_CompressedAir.png' class='hazard-icon'><div><div class='hazard-title'>Compressed Air:<br>Ball Valve and Compressed Air Lines</div><br>Compressed air creates force while releasing from the ball valve.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
+  },
+  {
+    "node": "Hzrd_05_CompressedAir_4",
+    "camera": "Cam_Hzrd_05_CompressedAir_4",
+    "type": "callout",
+    "mode": "safety",
+    "icon": "media/icon_CompressedAir.png",
+    "title": "Compressed Air",
+    "description": "<div class='hazard-header'><img src='media/icon_CompressedAir.png' class='hazard-icon'><div><div class='hazard-title'>Compressed Air:<br>Ball Valve and Compressed Air Lines</div><br>Compressed air creates force while releasing from the ball valve.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
+  },
+  {
+    "node": "Hzrd_05_CompressedAir_5",
+    "camera": "Cam_Hzrd_05_CompressedAir_5",
+    "type": "callout",
+    "mode": "safety",
+    "icon": "media/icon_CompressedAir.png",
+    "title": "Compressed Air",
+    "description": "<div class='hazard-header'><img src='media/icon_CompressedAir.png' class='hazard-icon'><div><div class='hazard-title'>Compressed Air:<br>Ball Valve and Compressed Air Lines</div><br>Compressed air creates force while releasing from the ball valve.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
+  },
+  {
+    "node": "Hzrd_06_IrritantHotGlue",
+    "camera": "Cam_Hzrd_06_IrritantHotGlue",
+    "type": "callout",
+    "mode": "safety",
+    "icon": "media/icon_Irritant.png",
+    "title": "Irritant (Hot Glue)",
+    "description": "<div class='hazard-header'><img src='media/icon_Irritant.png' class='hazard-icon'><div><div class='hazard-title'>Irritant (Hot Glue):<br>Glue Machine/Nozzle</div><br>There is chemical material present at the glue nozzle.<br><br><strong>You must wear PPE if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_Gloves.png' class='ppe-icon'> Heat-resistant gloves<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
+  },
+  {
+    "node": "Hzrd_07_ArcFlash",
+    "camera": "Cam_Hzrd_07_ArcFlash",
+    "type": "callout",
+    "mode": "safety",
+    "icon": "media/icon_ArcFlash.png",
+    "title": "Arc Flash",
+    "description": "<div class='hazard-header'><img src='media/icon_ArcFlash.png' class='hazard-icon'><div><div class='hazard-title'>Arc Flash:<br>Electrical Panel</div><br>There is arc flash risk at the electrical panel.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
+  },
+  {
+    "node": "Hzrd_08_AutomaticStart",
+    "camera": "Cam_Hzrd_08_AutomaticStart",
+    "type": "callout",
+    "mode": "safety",
+    "icon": "media/icon_AutomaticStart.png",
+    "title": "Automatic Start",
+    "description": "<div class='hazard-header'><img src='media/icon_AutomaticStart.png' class='hazard-icon'><div><div class='hazard-title'>Automatic Start:<br>Case Packer</div><br>The case packer can start automatically.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
+  },
+  {
+    "node": "Hzrd_11_ElectricalHazard_1",
+    "camera": "Cam_Hzrd_11_ElectricalHazard_1",
+    "type": "callout",
+    "mode": "safety",
+    "icon": "media/icon_ElectricalHazard.png",
+    "title": "Electrical Hazard",
+    "description": "<div class='hazard-header'><img src='media/icon_ElectricalHazard.png' class='hazard-icon'><div><div class='hazard-title'>Electrical Hazard:<br>Motors and Electrical Panels</div><br>There is shock risk at motors and electrical panels.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
+  },
+  {
+    "node": "Hzrd_11_ElectricalHazard_2",
+    "camera": "Cam_Hzrd_11_ElectricalHazard_2",
+    "type": "callout",
+    "mode": "safety",
+    "icon": "media/icon_ElectricalHazard.png",
+    "title": "Electrical Hazard",
+    "description": "<div class='hazard-header'><img src='media/icon_ElectricalHazard.png' class='hazard-icon'><div><div class='hazard-title'>Electrical Hazard:<br>Motors and Electrical Panels</div><br>There is shock risk at motors and electrical panels.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
+  },
+  {
+    "node": "Hzrd_11_ElectricalHazard_3",
+    "camera": "Cam_Hzrd_11_ElectricalHazard_3",
+    "type": "callout",
+    "mode": "safety",
+    "icon": "media/icon_ElectricalHazard.png",
+    "title": "Electrical Hazard",
+    "description": "<div class='hazard-header'><img src='media/icon_ElectricalHazard.png' class='hazard-icon'><div><div class='hazard-title'>Electrical Hazard:<br>Motors and Electrical Panels</div><br>There is shock risk at motors and electrical panels.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
+  },
+  {
+    "node": "Hzrd_11_ElectricalHazard_4",
+    "camera": "Cam_Hzrd_11_ElectricalHazard_4",
+    "type": "callout",
+    "mode": "safety",
+    "icon": "media/icon_ElectricalHazard.png",
+    "title": "Electrical Hazard",
+    "description": "<div class='hazard-header'><img src='media/icon_ElectricalHazard.png' class='hazard-icon'><div><div class='hazard-title'>Electrical Hazard:<br>Motors and Electrical Panels</div><br>There is shock risk at motors and electrical panels.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
+  },
+  {
+    "node": "Hzrd_11_ElectricalHazard_5",
+    "camera": "Cam_Hzrd_11_ElectricalHazard_5",
+    "type": "callout",
+    "mode": "safety",
+    "icon": "media/icon_ElectricalHazard.png",
+    "title": "Electrical Hazard",
+    "description": "<div class='hazard-header'><img src='media/icon_ElectricalHazard.png' class='hazard-icon'><div><div class='hazard-title'>Electrical Hazard:<br>Motors and Electrical Panels</div><br>There is shock risk at motors and electrical panels.<br><br><strong>Lockout/Tagout is required if you need to intervene in the operation.</strong><br><br><strong>Control measure:</strong><br><img src='media/icon_LOTO.png' class='ppe-icon'> Lockout/Tagout<br><br><strong>Required PPE:</strong><div class='ppe-row'><span><img src='media/icon_BumpCap.png' class='ppe-icon'>Bump cap</span><span><img src='media/icon_SafetyGlasses.png' class='ppe-icon'>Safety glasses</span></div><div class='ppe-row'><span><img src='media/icon_HearingProtection.png' class='ppe-icon'>Hearing protection</span><span><img src='media/icon_SafetyShoes.png' class='ppe-icon'>Safety shoes</span></div></div></div>"
+  }
 ]

@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title>Vestergaard Elephant Beta 3D Tour</title>
+    <title>Line 11 Case Packer</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
@@ -13,9 +13,15 @@
 <body>
     <div class="top-header">
         <img src="media/logo.png" alt="Logo" class="logo" />
-        <h1 class="header-title">Vestergaard Elephant Beta</h1>
+        <h1 class="header-title">Line 11 Case Packer</h1>
 
     </div>
+    <div id="modeFilter" class="mode-filter">
+        <button class="mode-btn" data-mode="LOTO">Lockout/Tagout</button>
+        <button class="mode-btn" data-mode="safety">Safety Map</button>
+    </div>
+    <div id="modeLabel" class="mode-label" style="display:none"></div>
+
     <div id="container"></div>
 
     <div id="loadingScreen" class="loading-screen">
@@ -32,11 +38,14 @@
         <div id="specContent"></div>
     </div>
     <div class="button-column">
-        <button id="techSpecBtn" title="Technical Specifications" class="icon-button techspec-btn">
+        <!-- <button id="techSpecBtn" title="Technical Specifications" class="icon-button techspec-btn">
             <img id="techSpecIcon" src="media/Spec_default.svg" alt="Tech Specs">
         </button>
         <button id="pdfBtn" title="Manual" class="icon-button pdf-btn">
             <img id="pdfIcon" src="media/PDF_default.svg" alt="Manual pdf">
+        </button> -->
+         <button id="modeBtn" title="Choose Mode" class="icon-button">
+            <img id="modeIcon" src="media/Grid_default.svg" alt="Mode">
         </button>
         <button id="resetBtn" title="Reset View" class="icon-button reset-btn">
             <img id="resetIcon" src="media/Reset_default.svg" alt="Reset">
@@ -44,18 +53,58 @@
         <button id="fullscreenBtn" class="icon-button fullscreen-btn" title="Fullscreen">
             <img src="media/Fullscreen_default.svg" alt="Fullscreen" />
         </button>
+       
+    </div>
 
+    <div id="modeOverlay" class="mode-overlay" style="display:none">
+        <div class="overlay-card">
+            <button id="overlayCloseBtn" class="overlay-close-btn"><img src="media/Close.png" alt="Close"></button>
+            <div id="overlayPanel1" class="overlay-panel">
+                <div class="overlay-title">Select Mode</div>
+                <div class="overlay-subtitle">What would you like to review?</div>
+                <div class="overlay-buttons">
+                    <button class="overlay-btn" id="overlayLOTOBtn">Lockout/Tagout</button>
+                    <button class="overlay-btn" id="overlaySafetyBtn">Safety Map</button>
+                </div>
+            </div>
+            <div id="overlayPanel2" class="overlay-panel" style="display:none">
+                <div class="overlay-title">LOTO Mode</div>
+                <div class="overlay-subtitle">How would you like to proceed?</div>
+                <div class="overlay-buttons">
+                    <button class="overlay-btn" id="overlayWalkBtn">Walk me through LOTO</button>
+                    <button class="overlay-btn" id="overlayExploreBtn">Let me explore</button>
+                </div>
 
+                <button class="overlay-back-btn" id="overlayBackBtn">← Back</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="hazardFilter" class="hazard-filter" style="display:none"></div>
+    <button id="mobileHazardToggle" style="display:none">+</button>
+    <div id="mobileHazardOverlay"></div>
+    <div id="mobileHazardPanel"></div>
+
+    <!-- Mobile walk-through step nav bar -->
+    <div id="mobileStepNav" style="display:none">
+        <button id="mobileStepPrev" class="nav-button">
+            <img src="media/arrow_left.svg" alt="Previous"><span class="nav-btn-text">Back</span>
+        </button>
+        <span id="mobileStepIndicator" class="mobile-step-indicator"></span>
+        <button id="mobileStepNext" class="nav-button">
+            <span class="nav-btn-text">Next</span><img src="media/arrow_right.svg" alt="Next">
+        </button>
+        <button id="mobileStepDone" class="step-done-btn" style="display:none">Done</button>
     </div>
 
     <!-- Add navigation UI -->
     <div class="navigation-ui">
         <button id="prevHotspotBtn" class="nav-button prev-button" title="Previous">
-            <img src="media/arrow_left.svg" alt="Previous">
+            <img src="media/arrow_left.svg" alt="Previous"><span class="nav-btn-text">Back</span>
         </button>
         <div id="currentHotspotTitle" class="hotspot-title-display"></div>
         <button id="nextHotspotBtn" class="nav-button next-button" title="Next">
-            <img src="media/arrow_right.svg" alt="Next">
+            <span class="nav-btn-text">Next</span><img src="media/arrow_right.svg" alt="Next">
         </button>
     </div>
 

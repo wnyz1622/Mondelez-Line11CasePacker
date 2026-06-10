@@ -41,18 +41,24 @@ class HotspotManager {
         this.hotspotsData = null;
         this.selectedHotspot = null;
         this.currentHotspotIndex = 0;
+        this.activeMode = null;
+        this.allHotspotsAll = [];
+        this.walkThroughMode = false;
+        this.walkThroughSteps = [];
+        this.currentWalkStep = 0;
 
         this.currentHotspotIndex = 0;
         this.visitedHotspots = new Set();
         this.isAnimating = false;
         this.needsUpdate = false;
         this.frameCount = 0;
-        
+        this._camAnim = null; // single camera animation state — driven by main loop
+
         // Performance settings
         this.LOD_DISTANCE = IS_MOBILE ? 15 : 10;
         this.CULL_DISTANCE = IS_MOBILE ? 30 : 50;
         this.targetFPS = IS_MOBILE ? 30 : 60;
-        
+
         // Simple raycast optimization
         this.raycastFrameCount = 0;
         this.raycastInterval = IS_MOBILE ? 8 : 5; // Check occlusion every N frames
@@ -65,6 +71,7 @@ class HotspotManager {
         this.tempMatrix = new THREE.Matrix4();
 
         this.hasLoggedRendererInfo = false;
+        this.activeHazardFilter = null;
 
     }
 
@@ -117,11 +124,11 @@ class HotspotManager {
             preserveDrawingBuffer: false,
             failIfMajorPerformanceCaveat: false
         });
-        
+
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(IS_MOBILE ? 1 : Math.min(window.devicePixelRatio, 2));
         this.renderer.outputColorSpace = SRGBColorSpace;
-        
+
         // Conditional shadows and tone mapping
         if (!IS_MOBILE) {
             this.renderer.shadowMap.enabled = true;
@@ -220,12 +227,12 @@ class HotspotManager {
         floor.rotation.x = -Math.PI / 2;
         floor.position.y = -5.5;
         floor.receiveShadow = !IS_MOBILE;
-        this.scene.add(floor);
+        //this.scene.add(floor);
 
         // Add controls
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true;
-        this.controls.dampingFactor = IS_MOBILE ? 0.05 : 0.15; // Less damping on mobile for responsiveness
+        this.controls.dampingFactor = IS_MOBILE ? 0.1 : 0.15;
         this.controls.zoomSpeed = 2.0;
         this.controls.enablePan = false;
         this.controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
@@ -241,13 +248,14 @@ class HotspotManager {
         //this.controls.maxAzimuthAngle = Math.PI;
         this.controls.enablePan = true; // Disable panning to keep focus on the model
         this.controls.target.y = 0; // Keep the orbit target at floor level
+        let controlsUpdateTimeout = null;
         // Keep target from going below floor
         this.controls.addEventListener('change', () => {
             if (this.controls.target.y < -5.3) {
                 this.controls.target.y = -5.4;
             }
             this.controlsChanged = true;
-            
+
             // Throttle updates on mobile
             if (IS_MOBILE) {
                 if (controlsUpdateTimeout) clearTimeout(controlsUpdateTimeout);
@@ -294,6 +302,9 @@ class HotspotManager {
         this.setupResetButton();
         this.setupTechSpecToggle();
         this.setupPDFButton();
+        this.setupModeFilter();
+        this.setupModeOverlay();
+        this.showOverlay(1);
 
         // Performance monitoring setup
         if (!IS_MOBILE) {
@@ -302,7 +313,6 @@ class HotspotManager {
             // document.body.appendChild(this.stats.dom);
         }
         // Start animation loop
-        this.clock = new THREE.Clock();
         this.animate();
         console.log('Initialization complete');
     }
@@ -347,7 +357,7 @@ class HotspotManager {
             };
 
 
-            const modelPath = 'media/model/compressed_1753896219932_ElephantBeta_v7.glb';
+            const modelPath = 'media/model/Line11CasePacker_v2.glb';
             console.log('Loading model from:', modelPath);
 
             // this.loader.load(modelPath, (gltf) => {
@@ -411,37 +421,11 @@ class HotspotManager {
                         console.log('✅ Material Variants Found:', this.variantList);
                     }
 
-                    // Optimized model traversal - combine multiple operations
+                    // Build raycastable mesh list in a single traversal
                     this.interactiveMeshes = [];
                     const nodePositions = {};
                     const targetNodes = ['Main_FrontView', 'Main_RearView', 'Main_LeftView', 'Main_RightView', '01_ChargingSocket'];
 
-                    this.model.traverse((node) => {
-                        // Handle meshes
-                        if (node.isMesh) {
-                            // Add to interactive meshes if visible
-                            if (node.visible) {
-                                this.interactiveMeshes.push(node);
-                            }
-                            //triangle counts
-                            // let triangleCount = 0;
-                            // this.model.traverse((obj) => {
-                            //     if (obj.isMesh) {
-                            //         const geom = obj.geometry;
-                            //         triangleCount += geom.index ? geom.index.count / 3 : geom.attributes.position.count / 3;
-                            //     }
-                            // });
-                            // console.log("🔺 Triangle count:", triangleCount);
-                            this.interactiveMeshes = []; // ✅ New array for raycasting
-
-                            this.model.traverse((node) => {
-                                if (node.isMesh && node.visible) {
-                                    this.interactiveMeshes.push(node); // ✅ Store raycastable mesh
-                                }
-                            });
-                        }
-                    });
-                    this.interactiveMeshes = [];
                     this.model.traverse((node) => {
                         if (node.isMesh && node.visible) {
                             this.interactiveMeshes.push(node);
@@ -460,7 +444,22 @@ class HotspotManager {
                     console.log('============================');
 
                     this.scene.add(this.model);
+                    let triangleCount = 0;
+                    let meshCount = 0;
 
+                    this.model.traverse((obj) => {
+                        if (obj.isMesh) {
+                            meshCount++;
+
+                            const geom = obj.geometry;
+                            triangleCount += geom.index
+                                ? geom.index.count / 3
+                                : geom.attributes.position.count / 3;
+                        }
+                    });
+
+                    console.log("🔺 Triangles:", triangleCount);
+                    console.log("📦 Meshes:", meshCount);
                     // Set texture filtering for all textures in model materials
                     this.model.traverse((node) => {
                         if (node.isMesh && node.material) {
@@ -508,10 +507,10 @@ class HotspotManager {
                     let cameraZ = Math.abs(maxDim / Math.tan(fov / 2));
                     // Enforce a comfortable default reset distance (e.g., z=2)
                     const defaultResetDistance = 5; // Between minDistance (0.1) and maxDistance (25)
-                    this.camera.position.set(0,0, 25);
+                    this.camera.position.set(5, 3, 12);
                     this.camera.lookAt(0, 0, 0);
                     this.camera.updateProjectionMatrix();
-                    this.initialCameraPosition = new THREE.Vector3(0,0,25);
+                    this.initialCameraPosition = new THREE.Vector3(12, 0, 8);
                     this.initialCameraTarget = new THREE.Vector3(0, 0, 0);
 
                     //help see what camera position is good and set that above 
@@ -558,6 +557,7 @@ class HotspotManager {
                         this.gltf.parser.getDependency('material', primitive.material).then((defaultMat) => {
                             object.material = defaultMat;
                             object.material.needsUpdate = true;
+                            this.needsUpdate = true;
                         });
                     }
                 }
@@ -578,6 +578,7 @@ class HotspotManager {
                 const willOpen = !openNode.visible;
                 openNode.visible = willOpen;
                 closeNode.visible = !willOpen;
+                this.needsUpdate = true; // visibility change requires re-render
             } else {
                 console.warn(`Door nodes not found for base: ${base}`, { openNode, closeNode });
             }
@@ -656,27 +657,32 @@ class HotspotManager {
         // Deselect previous
         if (this.selectedHotspot && this.selectedHotspot !== hotspot) {
             this.visitedHotspots.add(this.selectedHotspot);
+            this.selectedHotspot.element.classList.add('visited');
             this.selectedHotspot.element.style.backgroundImage =
                 this.selectedHotspot.data.type === 'animation'
-                    ? `url('media/door_visited.png')`
-                    : `url('media/Info_visited.png')`;
+                    ? `url('media/door_default.png')`
+                    : `url('${this.selectedHotspot.data.icon || 'media/Info_default.png'}')`;
             this.selectedHotspot.info.style.display = 'none';
             this.selectedHotspot.info.classList.remove('active');
         }
 
         this.selectedHotspot = hotspot;
-
+        hotspot.element.classList.remove('visited');
         this.visitedHotspots.add(hotspot);
 
         // Update icon state
         hotspot.element.style.backgroundImage = hotspotData.type === 'animation'
             ? `url('media/door_selected.png')`
-            : `url('media/Info_Selected.png')`;
+            : `url('${hotspotData.icon || 'media/Info_Selected.png'}')`;
 
         // 🚫 Don’t show panel for animation hotspots
         if (hotspotData.type !== 'animation') {
             hotspot.info.style.display = 'block';
             hotspot.info.classList.add('active');
+            const startCollapsed = IS_MOBILE && hotspotData.mode === 'safety';
+            hotspot.info.classList.toggle('collapsed', startCollapsed);
+            const cb = hotspot.info.querySelector('.mobile-collapse-btn');
+            if (cb) cb.textContent = startCollapsed ? '▴' : '▾';
         } else {
             hotspot.info.style.display = 'none';
             hotspot.info.classList.remove('active');
@@ -684,7 +690,7 @@ class HotspotManager {
 
 
         // 🔁 Move to predefined camera position if available
-        const cameraNode = this.getCameraNode('Cam_' + hotspotData.node);
+        const cameraNode = this.getCameraNode(hotspotData.camera || 'Cam_' + hotspotData.node);
 
         const hotspotNode = this.model.getObjectByName(hotspotData.node);
         if (cameraNode && cameraNode.isCamera && hotspotNode) {
@@ -692,27 +698,20 @@ class HotspotManager {
             cameraNode.getWorldPosition(endPos);
             const endTarget = new THREE.Vector3();
             hotspotNode.getWorldPosition(endTarget);
-            const startPos = this.camera.position.clone();
-            const startTarget = this.controls.target.clone();
-            // Animate both camera position and controls.target (orbit center)
-            const duration = 1500;
-            const startTime = Date.now();
-            const animate = () => {
-                const elapsed = Date.now() - startTime;
-                const t = Math.min(elapsed / duration, 1);
-                const ease = 1 - Math.pow(1 - t, 4);
-                this.camera.position.lerpVectors(startPos, endPos, ease);
-                this.controls.target.lerpVectors(startTarget, endTarget, ease);
-                this.controls.update();
-                if (t < 1) {
-                    requestAnimationFrame(animate);
-                }
+            this._camAnim = {
+                startPos: this.camera.position.clone(),
+                endPos,
+                startTarget: this.controls.target.clone(),
+                endTarget,
+                startQuat: null,
+                endQuat: null,
+                startTime: Date.now(),
+                duration: 1500,
             };
-            animate();
         } else {
             this.moveToHotspotView(hotspot);
         }
-        //outline seleected mesh
+        //outline selected mesh
         let meshToOutline = this.model.getObjectByName(hotspotData.node);
         // If it's an animation door, outline the visible state (open or closed)
         if (hotspotData.type === 'animation') {
@@ -756,6 +755,14 @@ class HotspotManager {
             this.currentHotspotIndex = idx;
             this.updateTitleDisplay();
         }
+
+        if (this.walkThroughMode) {
+            if (hotspotData.step !== undefined) {
+                const stepIdx = this.walkThroughSteps.findIndex(s => s.node === hotspotData.node);
+                if (stepIdx !== -1) this.currentWalkStep = stepIdx;
+            }
+            this.updateStepNavDisplay();
+        }
     }
 
     // ---- Door helpers (Base + Base_open) ----
@@ -787,7 +794,8 @@ class HotspotManager {
 
         // Store the full list of hotspots for navigation
         // exclude both "camera" and "animation" from arrow navigation
-        this.allHotspots = hotspotDataList.filter(h => h.type !== 'camera' && h.type !== 'animation');
+        this.allHotspotsAll = hotspotDataList.filter(h => h.type !== 'camera' && h.type !== 'animation');
+        this.allHotspots = [...this.allHotspotsAll];
 
 
 
@@ -836,23 +844,16 @@ class HotspotManager {
                     endTarget = new THREE.Vector3(0, 0, -1).applyQuaternion(targetQuat).add(targetPos);
                 }
 
-                const duration = 1000;
-                const startTime = Date.now();
-
-                const animate = () => {
-                    const elapsed = Date.now() - startTime;
-                    const t = Math.min(elapsed / duration, 1);
-                    const ease = 1 - Math.pow(1 - t, 4);
-
-                    this.camera.position.lerpVectors(startPos, targetPos, ease);
-                    this.camera.quaternion.slerpQuaternions(startQuat, targetQuat, ease);
-                    this.controls.target.lerpVectors(startTarget, endTarget, ease);
-                    this.controls.update();
-
-                    if (t < 1) requestAnimationFrame(animate);
+                this._camAnim = {
+                    startPos,
+                    endPos: targetPos,
+                    startTarget,
+                    endTarget,
+                    startQuat,
+                    endQuat: targetQuat,
+                    startTime: Date.now(),
+                    duration: 1000,
                 };
-
-                animate();
             });
 
             container.appendChild(label);
@@ -920,6 +921,14 @@ class HotspotManager {
             navigateToHotspot(this.currentHotspotIndex + 1);
         });
 
+        // Mobile walk-through step nav bar buttons
+        const mobileStepPrev = document.getElementById('mobileStepPrev');
+        const mobileStepNext = document.getElementById('mobileStepNext');
+        const mobileStepDone = document.getElementById('mobileStepDone');
+        if (mobileStepPrev) mobileStepPrev.addEventListener('click', () => this.navigateWalkStep(-1));
+        if (mobileStepNext) mobileStepNext.addEventListener('click', () => this.navigateWalkStep(1));
+        if (mobileStepDone) mobileStepDone.addEventListener('click', () => this.showOverlay(1));
+
         hotspotDataList.forEach(hotspotData => {
             if (hotspotData.type === 'camera') return;
 
@@ -947,27 +956,52 @@ class HotspotManager {
             hotspotDiv.className = 'hotspot';
             hotspotDiv.style.backgroundImage = hotspotData.type === 'animation'
                 ? `url('media/door_default.png')`
-                : `url('media/Info_default.png')`;
+                : `url('${hotspotData.icon || 'media/Info_default.png'}')`;
             document.body.appendChild(hotspotDiv);
 
             const infoDiv = document.createElement('div');
             infoDiv.className = 'hotspot-info';
+            if (hotspotData.mode) infoDiv.dataset.mode = hotspotData.mode;
             infoDiv.style.position = 'absolute';
             infoDiv.style.display = 'none'; // Start hidden
             infoDiv.style.left = '-9999px'; // Start off-screen to prevent flicker
             infoDiv.style.top = '-9999px';
             infoDiv.innerHTML = `
-           
-             <img class="closeSpecIcon" src="media/Close.png" alt="Close" />
-             <div class="text-scroll"> 
-            
-             <div class="hotspot-title">${hotspotData.title}</div>
-        <div class="hotspot-description">${hotspotData.description}</div>
-    </div>
-    
-    <div class="bottom-blocker"></div>
-        `;
+                <span class="mobile-handle-title">${hotspotData.title}</span>
+                <button class="mobile-collapse-btn" aria-label="Collapse">▾</button>
+                <img class="closeSpecIcon" src="media/Close.png" alt="Close" />
+                <div class="text-scroll">
+                    <div class="hotspot-title">${hotspotData.title}</div>
+                    <div class="hotspot-description">${hotspotData.description}</div>
+                </div>
+                <div class="bottom-blocker"></div>
+            `;
             document.body.appendChild(infoDiv);
+
+            // Add step-nav arrows for walk-through mode (step hotspots only)
+            if (hotspotData.step !== undefined) {
+                const stepNav = document.createElement('div');
+                stepNav.className = 'step-nav-arrows';
+                stepNav.innerHTML = `
+                    <button class="step-nav-btn step-prev" title="Previous step"><img src="media/arrow_left.svg" alt="Previous" style="width:14px;height:14px;"></button>
+                    <span class="step-indicator"></span>
+                    <button class="step-nav-btn step-next" title="Next step"><img src="media/arrow_right.svg" alt="Next" style="width:14px;height:14px;"></button>
+                    <button class="step-done-btn">Done</button>
+                `;
+                infoDiv.appendChild(stepNav);
+                stepNav.querySelector('.step-prev').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.navigateWalkStep(-1);
+                });
+                stepNav.querySelector('.step-next').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.navigateWalkStep(1);
+                });
+                stepNav.querySelector('.step-done-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.showOverlay(1);
+                });
+            }
 
             // Add working close logic
             const closeBtn = infoDiv.querySelector('.closeSpecIcon');
@@ -978,9 +1012,10 @@ class HotspotManager {
 
                 // Deselect logic if you're using this.selectedHotspot
                 if (this.selectedHotspot && this.selectedHotspot.info === infoDiv) {
+                    this.selectedHotspot.element.classList.add('visited');
                     this.selectedHotspot.element.style.backgroundImage = this.selectedHotspot.data.type === 'animation'
-                        ? `url('media/door_visited.png')`
-                        : `url('media/Info_visited.png')`;
+                        ? `url('media/door_default.png')`
+                        : `url('${this.selectedHotspot.data.icon || 'media/Info_default.png'}')`;
                     this.selectedHotspot = null;
                     // Clear outline effect
                     if (this.outlineEffect && this.outlineEffect.selection) {
@@ -988,6 +1023,15 @@ class HotspotManager {
                     }
                 }
             });
+
+            const collapseBtn = infoDiv.querySelector('.mobile-collapse-btn');
+            if (collapseBtn) {
+                collapseBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const collapsed = infoDiv.classList.toggle('collapsed');
+                    collapseBtn.textContent = collapsed ? '▴' : '▾';
+                });
+            }
 
             const geometry = new THREE.SphereGeometry(0.01);
             const material = new THREE.MeshBasicMaterial({ visible: false });
@@ -1018,10 +1062,17 @@ class HotspotManager {
             });
 
             hotspotDiv.addEventListener('mouseenter', () => {
+                // Dismiss any other hover-only tooltip so only one shows at a time
+                this.hotspots.forEach(h => {
+                    if (h !== hotspot && h !== this.selectedHotspot) {
+                        h.info.style.display = 'none';
+                    }
+                });
+
                 if (this.selectedHotspot !== hotspot) {
                     hotspotDiv.style.backgroundImage = hotspotData.type === "animation"
                         ? `url('media/door_selected.png')`
-                        : `url('media/Info_Selected.png')`;
+                        : `url('${hotspotData.iconSelected || hotspotData.icon || 'media/Info_Selected.png'}')`;
                 }
 
                 infoDiv.style.display = 'block';
@@ -1031,15 +1082,12 @@ class HotspotManager {
                 if (this.selectedHotspot === hotspot) {
                     hotspotDiv.style.backgroundImage = hotspotData.type === "animation"
                         ? `url('media/door_selected.png')`
-                        : `url('media/Info_Selected.png')`;
-                } else if (this.visitedHotspots.has(hotspot)) {
-                    hotspotDiv.style.backgroundImage = hotspotData.type === "animation"
-                        ? `url('media/door_visited.png')`
-                        : `url('media/Info_visited.png')`;
+                        : `url('${hotspotData.icon || 'media/Info_Selected.png'}')`;
                 } else {
+                    infoDiv.style.display = 'none';
                     hotspotDiv.style.backgroundImage = hotspotData.type === "animation"
                         ? `url('media/door_default.png')`
-                        : `url('media/Info_default.png')`;
+                        : `url('${hotspotData.icon || 'media/Info_default.png'}')`;
                 }
             });
         });
@@ -1057,9 +1105,121 @@ class HotspotManager {
 
 
 
+        this.setupHazardFilter();
+
         // Ensure hotspots are visible by default after all are created
         this.updateHotspotPositions();
 
+    }
+
+    setupHazardFilter() {
+        const desktopPanel = document.getElementById('hazardFilter');
+        if (!desktopPanel) return;
+
+        const seen = new Map();
+        this.allHotspotsAll
+            .filter(h => h.mode === 'safety')
+            .forEach(h => { if (!seen.has(h.title)) seen.set(h.title, h.icon); });
+
+        const buildButtons = (container) => {
+            container.innerHTML = '';
+            const clearBtn = document.createElement('button');
+            clearBtn.className = 'hazard-filter-btn hazard-filter-clear active';
+            clearBtn.textContent = 'All Hazards';
+            clearBtn.addEventListener('click', () => this.clearHazardFilter());
+            container.appendChild(clearBtn);
+
+            seen.forEach((icon, title) => {
+                const btn = document.createElement('button');
+                btn.className = 'hazard-filter-btn';
+                btn.dataset.hazard = title;
+                const img = document.createElement('img');
+                img.src = icon; img.alt = title;
+                const label = document.createElement('span');
+                label.textContent = title;
+                btn.appendChild(img);
+                btn.appendChild(label);
+                btn.addEventListener('click', () => this.setHazardFilter(title));
+                container.appendChild(btn);
+            });
+        };
+
+        buildButtons(desktopPanel);
+
+        if (IS_MOBILE) {
+            const mobilePanel = document.getElementById('mobileHazardPanel');
+            if (mobilePanel) buildButtons(mobilePanel);
+
+            const toggle = document.getElementById('mobileHazardToggle');
+            const mobilePanel2 = document.getElementById('mobileHazardPanel');
+            const overlay = document.getElementById('mobileHazardOverlay');
+            if (toggle && !toggle._setupDone) {
+                toggle._setupDone = true;
+                const openPanel = () => { mobilePanel2.classList.add('open'); overlay.classList.add('open'); toggle.textContent = '×'; };
+                const closePanel = () => { mobilePanel2.classList.remove('open'); overlay.classList.remove('open'); toggle.textContent = '+'; };
+                toggle.addEventListener('click', () => mobilePanel2.classList.contains('open') ? closePanel() : openPanel());
+                overlay.addEventListener('click', closePanel);
+                this._closeMobileHazardPanel = closePanel;
+            }
+        }
+    }
+
+    setHazardFilter(title) {
+        this.activeHazardFilter = title;
+        this.allHotspots = this.allHotspotsAll.filter(h => h.mode === 'safety' && h.title === title);
+        this.currentHotspotIndex = -1;
+        const titleDisplay = document.getElementById('currentHotspotTitle');
+        if (titleDisplay) titleDisplay.textContent = 'Click a hotspot or use arrows';
+
+        document.querySelectorAll('.hazard-filter-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.hazard === title);
+        });
+        if (IS_MOBILE && this._closeMobileHazardPanel) this._closeMobileHazardPanel();
+
+        if (this.selectedHotspot && this.selectedHotspot.data.title !== title) {
+            this.selectedHotspot.element.classList.add('visited');
+            this.selectedHotspot.element.style.backgroundImage = `url('${this.selectedHotspot.data.icon || 'media/Info_default.png'}')`;
+            this.selectedHotspot.info.style.display = 'none';
+            this.selectedHotspot.info.classList.remove('active');
+            if (this.outlineEffect && this.outlineEffect.selection) {
+                this.outlineEffect.selection.clear();
+            }
+            this.selectedHotspot = null;
+        }
+
+        // Fly camera to first hotspot of this type and open its info panel
+        const firstMatch = this.hotspots.find(h => h.data.title === title && h.data.mode === 'safety');
+        if (firstMatch) {
+            this.handleHotspotClick(firstMatch);
+        }
+
+        this.needsUpdate = true;
+    }
+
+    clearHazardFilter() {
+        this.activeHazardFilter = null;
+        this.allHotspots = this.allHotspotsAll.filter(h => h.mode === 'safety');
+        this.currentHotspotIndex = -1;
+        const titleDisplay = document.getElementById('currentHotspotTitle');
+        if (titleDisplay) titleDisplay.textContent = 'Click a hotspot or use arrows';
+
+        document.querySelectorAll('.hazard-filter-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.hazard-filter-clear').forEach(btn => btn.classList.add('active'));
+        if (IS_MOBILE && this._closeMobileHazardPanel) this._closeMobileHazardPanel();
+
+        if (this.selectedHotspot) {
+            this.selectedHotspot.element.classList.add('visited');
+            this.selectedHotspot.element.style.backgroundImage = `url('${this.selectedHotspot.data.icon || 'media/Info_default.png'}')`;
+            this.selectedHotspot.info.style.display = 'none';
+            this.selectedHotspot.info.classList.remove('active');
+            if (this.outlineEffect && this.outlineEffect.selection) {
+                this.outlineEffect.selection.clear();
+            }
+            this.selectedHotspot = null;
+        }
+
+        this.animateCameraReset();
+        this.needsUpdate = true;
     }
 
     updateTitleDisplay() {
@@ -1121,6 +1281,7 @@ class HotspotManager {
                 this.gltf.parser.getDependency('material', mapping.material).then((newMat) => {
                     object.material = newMat;
                     object.material.needsUpdate = true;
+                    this.needsUpdate = true;
                 });
             }
         });
@@ -1129,7 +1290,7 @@ class HotspotManager {
     }
 
     moveToHotspotView(hotspot) {
-        const camNodeName = `Cam_${hotspot.data.node}`;
+        const camNodeName = hotspot.data.camera || `Cam_${hotspot.data.node}`;
         const camNode = this.model.getObjectByName(camNodeName);
         const hotspotNode = this.model.getObjectByName(hotspot.data.node);
         if (camNode && camNode.isObject3D && hotspotNode) {
@@ -1149,6 +1310,7 @@ class HotspotManager {
                 this.camera.position.lerpVectors(startPos, endPos, ease);
                 this.controls.target.lerpVectors(startTarget, endTarget, ease);
                 this.controls.update();
+                this.needsUpdate = true;
                 if (t < 1) {
                     requestAnimationFrame(animate);
                 }
@@ -1201,9 +1363,9 @@ class HotspotManager {
             visibleEdgeColor: new THREE.Color('#2873F5'),
             hiddenEdgeColor: new THREE.Color('#2873F5'),
             multisampling: 2, // Reduced from 4
-            resolution: { 
-                width: window.innerWidth / 2, 
-                height: window.innerHeight / 2 
+            resolution: {
+                width: window.innerWidth / 2,
+                height: window.innerHeight / 2
             },
             xRay: false,
             kernelSize: 1,
@@ -1221,33 +1383,42 @@ class HotspotManager {
     // Optimized animation loop
     animate() {
         requestAnimationFrame(this.animate.bind(this));
+
+        // Advance camera animation (single source of truth — no separate rAF loops)
+        if (this._camAnim) {
+            const a = this._camAnim;
+            const elapsed = Date.now() - a.startTime;
+            const t = Math.min(elapsed / a.duration, 1);
+            const ease = 1 - Math.pow(1 - t, 4);
+            this.camera.position.lerpVectors(a.startPos, a.endPos, ease);
+            if (a.startQuat && a.endQuat) {
+                this.camera.quaternion.slerpQuaternions(a.startQuat, a.endQuat, ease);
+            }
+            this.controls.target.lerpVectors(a.startTarget, a.endTarget, ease);
+            this.needsUpdate = true;
+            if (t >= 1) this._camAnim = null;
+        }
+
+        // Apply damping — fires 'change' event each frame while settling,
+        // which sets this.cameraChanged = true via the listener below
         this.controls.update();
 
-        // Update hotspot positions
-        this.updateHotspotPositions();
-
-        // Update animations
-        if (this.mixer) {
-            const delta = this.clock.getDelta();
-            this.mixer.update(delta);
+        const shouldRefresh = this.cameraChanged || this.needsUpdate;
+        if (shouldRefresh) {
+            this.updateHotspotPositions();
+            // Use full composer pass only when an outline is active
+            const hasOutline = this.outlineEffect?.selection.size > 0;
+            if (hasOutline) {
+                this.composer.render();
+            } else {
+                this.renderer.render(this.scene, this.camera);
+            }
+            this.cameraChanged = false;
+            this.needsUpdate = false;
         }
 
-        // Render using composer (postprocessing) if not mobile, otherwise direct render
-        if (!IS_MOBILE && this.composer) {
-            this.composer.render();
-        } else {
-            this.renderer.render(this.scene, this.camera);
-        }
-
-        // Performance monitoring
         if (!IS_MOBILE && this.stats) {
             this.stats.update();
-        }
-
-        // Log renderer info once
-        if (!this.hasLoggedRendererInfo) {
-            console.log('📊 Renderer Info:', this.renderer.info);
-            this.hasLoggedRendererInfo = true;
         }
     }
 
@@ -1258,6 +1429,7 @@ class HotspotManager {
             const now = performance.now();
             const t = Math.min((now - startTime) / duration, 1);
             this.outlineEffect.edgeStrength = start + (end - start) * t;
+            this.needsUpdate = true;
             if (t < 1) {
                 requestAnimationFrame(animate);
             } else {
@@ -1276,6 +1448,11 @@ class HotspotManager {
         const shouldRaycast = this.raycastFrameCount >= this.raycastInterval;
         if (shouldRaycast) this.raycastFrameCount = 0;
 
+        // Cache once per update — avoids repeated DOM reads inside the loop
+        const viewW = window.innerWidth;
+        const viewH = window.innerHeight;
+        const isMobileView = viewW < 600 || viewH < 400;
+
         this.hotspots.forEach((hotspot) => {
             const worldPosition = new THREE.Vector3();
             hotspot.mesh.getWorldPosition(worldPosition);
@@ -1286,58 +1463,67 @@ class HotspotManager {
             const isInView = screenPosition.x >= -1 && screenPosition.x <= 1 &&
                 screenPosition.y >= -1 && screenPosition.y <= 1;
 
-            const x = (screenPosition.x + 1) * window.innerWidth / 2;
-            const y = (-screenPosition.y + 1) * window.innerHeight / 2;
+            const x = (screenPosition.x + 1) * viewW / 2;
+            const y = (-screenPosition.y + 1) * viewH / 2;
 
-            // Raycast to detect occlusion
-             //Increase the Tolerance to be less senstive, show less hidden callouts
+            // Raycast occlusion — only recompute every N frames, use cache otherwise
+            // Increase tolerance to be less sensitive (show fewer hidden callouts)
+            let isOccluded;
+            if (shouldRaycast) {
+                const direction = worldPosition.clone().sub(this.camera.position).normalize();
+                this.raycaster.set(this.camera.position, direction);
+                const intersects = this.raycaster.intersectObjects(this.interactiveMeshes, true)
+                    .filter(hit => hit.object.name !== 'SM_PackingMachine_v03_M_Glass_0');
+                const distanceToHotspot = this.camera.position.distanceTo(worldPosition);
+                isOccluded = intersects.length > 0 && intersects[0].distance + 0.1 < distanceToHotspot;
+                this.lastOcclusionResults.set(hotspot, isOccluded);
+            } else {
+                isOccluded = this.lastOcclusionResults.get(hotspot) ?? false;
+            }
 
-            const direction = worldPosition.clone().sub(this.camera.position).normalize();
-            this.raycaster.set(this.camera.position, direction);
-            const intersects = this.raycaster.intersectObjects(this.interactiveMeshes, true);
-            const distanceToHotspot = this.camera.position.distanceTo(worldPosition);
-            const isOccluded = intersects.length > 0 && intersects[0].distance + 0.1 < distanceToHotspot;
-            //Increase the Tolerance to be less senstive, show less hidden callouts
+            // Update visibility
+            let modeMatch;
+            if (this.walkThroughMode) {
+                modeMatch = hotspot.data.mode === 'LOTO' && hotspot.data.step !== undefined;
+            } else {
+                modeMatch = !!this.activeMode && hotspot.data.mode === this.activeMode;
+            }
+            const hazardFilterMatch = !(this.activeMode === 'safety' && this.activeHazardFilter)
+                || hotspot.data.title === this.activeHazardFilter;
+            const shouldShow = modeMatch && hazardFilterMatch && !(isBehindCamera || !isInView || isOccluded);
 
-            // Update visibility using opacity transition
-            const shouldShow = !(isBehindCamera || !isInView || isOccluded);
-            
-            // Clean on/off visibility - no transparency
             hotspot.element.style.opacity = shouldShow ? '1' : '0';
             hotspot.element.style.pointerEvents = shouldShow ? 'auto' : 'none';
 
-            // Update position only if significantly changed (reduce DOM updates)
-            const currentLeft = parseInt(hotspot.element.style.left) || 0;
-            const currentTop = parseInt(hotspot.element.style.top) || 0;
-            
-            if (Math.abs(currentLeft - x) > 1 || Math.abs(currentTop - y) > 1) {
+            // JS-side cache avoids layout-forcing DOM reads (parseInt on style props)
+            if (Math.abs((hotspot._lastX ?? Infinity) - x) > 1 || Math.abs((hotspot._lastY ?? Infinity) - y) > 1) {
                 hotspot.element.style.left = `${x}px`;
                 hotspot.element.style.top = `${y}px`;
+                hotspot._lastX = x;
+                hotspot._lastY = y;
             }
 
             // Handle info panel
             const showInfo = shouldShow && (hotspot === this.selectedHotspot || hotspot.element.matches(':hover'));
             hotspot.info.style.display = showInfo ? 'block' : 'none';
 
-
-            function isMobileView() {
-                return window.innerWidth < 600 || window.innerHeight < 400;
-            }
-
-            if (isMobileView()) {
+            const infoLeft = x + 20;
+            if (isMobileView) {
                 if (hotspot === this.selectedHotspot) {
                     hotspot.info.classList.add('mobile-fixed');
                     hotspot.info.style.left = '';
                     hotspot.info.style.top = '';
+                    hotspot._lastInfoLeft = null;
+                    hotspot._lastInfoTop = null;
                 } else {
                     hotspot.info.classList.remove('mobile-fixed');
-                    if (hotspot.info.style.left !== `${x + 20}px`) hotspot.info.style.left = `${x + 20}px`;
-                    if (hotspot.info.style.top !== `${y}px`) hotspot.info.style.top = `${y}px`;
+                    if (hotspot._lastInfoLeft !== infoLeft) { hotspot.info.style.left = `${infoLeft}px`; hotspot._lastInfoLeft = infoLeft; }
+                    if (hotspot._lastInfoTop !== y) { hotspot.info.style.top = `${y}px`; hotspot._lastInfoTop = y; }
                 }
             } else {
                 hotspot.info.classList.remove('mobile-fixed');
-                if (hotspot.info.style.left !== `${x + 20}px`) hotspot.info.style.left = `${x + 20}px`;
-                if (hotspot.info.style.top !== `${y}px`) hotspot.info.style.top = `${y}px`;
+                if (hotspot._lastInfoLeft !== infoLeft) { hotspot.info.style.left = `${infoLeft}px`; hotspot._lastInfoLeft = infoLeft; }
+                if (hotspot._lastInfoTop !== y) { hotspot.info.style.top = `${y}px`; hotspot._lastInfoTop = y; }
             }
         });
     }
@@ -1353,7 +1539,7 @@ class HotspotManager {
         // Update composer if exists
         if (this.composer) {
             this.composer.setSize(window.innerWidth, window.innerHeight);
-            
+
             // Update outline effect resolution
             if (this.outlineEffect && this.outlineEffect.resolution) {
                 this.outlineEffect.resolution.width = window.innerWidth * pixelRatio;
@@ -1361,6 +1547,9 @@ class HotspotManager {
                 this.outlineEffect.setSize(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
             }
         }
+
+        // Canvas buffer is cleared on resize — force a re-render
+        this.needsUpdate = true;
     }
 
     setupFullscreenButton() {
@@ -1369,9 +1558,9 @@ class HotspotManager {
             console.warn('Fullscreen button not found');
             return;
         }
-        
+
         const icon = button.querySelector('img');
-        
+
         button.addEventListener('click', () => {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(err => {
@@ -1385,24 +1574,12 @@ class HotspotManager {
         // Update button icon on fullscreen state change
         document.addEventListener('fullscreenchange', () => {
             if (icon) {
-                icon.src = document.fullscreenElement 
+                icon.src = document.fullscreenElement
                     ? 'media/Fullscreen_acitve.svg'
                     : 'media/Fullscreen_default.svg';
             }
         });
 
-        // Hover effects
-        button.addEventListener('mouseenter', () => {
-            if (icon && !document.fullscreenElement) {
-                icon.src = 'media/Fullscreen_acitve.svg';
-            }
-        });
-
-        button.addEventListener('mouseleave', () => {
-            if (icon && !document.fullscreenElement) {
-                icon.src = 'media/Fullscreen_default.svg';
-            }
-        });
     }
 
     setupResetButton() {
@@ -1411,8 +1588,6 @@ class HotspotManager {
             console.warn('Reset button not found');
             return;
         }
-        
-        const icon = document.getElementById('resetIcon');
 
         button.addEventListener('click', () => {
             console.log('🔄 Resetting view...');
@@ -1425,7 +1600,7 @@ class HotspotManager {
                 const startTarget = this.controls.target.clone();
                 const duration = 2000;
                 const startTime = Date.now();
-                
+
                 const animateReset = () => {
                     const elapsed = Date.now() - startTime;
                     const t = Math.min(elapsed / duration, 1);
@@ -1433,6 +1608,7 @@ class HotspotManager {
                     this.camera.position.lerpVectors(startPos, targetPos, ease);
                     this.controls.target.lerpVectors(startTarget, targetTarget, ease);
                     this.controls.update();
+                    this.needsUpdate = true;
                     if (t < 1) {
                         requestAnimationFrame(animateReset);
                     }
@@ -1442,10 +1618,11 @@ class HotspotManager {
 
             // Clear any selected hotspot
             if (this.selectedHotspot) {
-                this.selectedHotspot.element.style.backgroundImage = 
+                this.selectedHotspot.element.classList.add('visited');
+                this.selectedHotspot.element.style.backgroundImage =
                     this.selectedHotspot.data.type === 'animation'
-                        ? `url('media/door_visited.png')`
-                        : `url('media/Info_visited.png')`;
+                        ? `url('media/door_default.png')`
+                        : `url('${this.selectedHotspot.data.icon || 'media/Info_default.png'}')`;
                 this.selectedHotspot.info.style.display = 'none';
                 this.selectedHotspot.info.classList.remove('active');
                 this.selectedHotspot = null;
@@ -1473,30 +1650,12 @@ class HotspotManager {
                 this.applyMaterialVariant('00_Default');
             }
 
-            // Reset button icon after click
-            if (icon) {
-                setTimeout(() => {
-                    icon.src = 'media/Reset_default.svg';
-                }, 150);
-            }
-        });
-
-        // Hover effects
-        button.addEventListener('mouseenter', () => {
-            if (icon) {
-                icon.src = 'media/Reset_active.svg';
-            }
-        });
-
-        button.addEventListener('mouseleave', () => {
-            if (icon) {
-                icon.src = 'media/Reset_default.svg';
-            }
         });
     }
     setupPDFButton() {
         const button = document.getElementById('pdfBtn');
         const icon = document.getElementById('pdfIcon');
+        if (!button) return;
 
         button.addEventListener('click', () => {
             // Replace with the path to your PDF
@@ -1513,12 +1672,323 @@ class HotspotManager {
             icon.src = 'media/PDF_default.svg';
         });
     }
+    setupModeFilter() {
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.setModeFilter(btn.dataset.mode);
+            });
+        });
+    }
+
+    setModeFilter(mode) {
+        this.walkThroughMode = false;
+        this.activeMode = this.activeMode === mode ? null : mode;
+        this.activeHazardFilter = null;
+
+        this.allHotspots = this.activeMode
+            ? this.allHotspotsAll.filter(h => h.mode === this.activeMode)
+            : [...this.allHotspotsAll];
+
+        const isSafety = this.activeMode === 'safety';
+        const hazardPanel = document.getElementById('hazardFilter');
+        if (hazardPanel) {
+            hazardPanel.style.display = !IS_MOBILE && isSafety ? 'flex' : 'none';
+            hazardPanel.querySelectorAll('.hazard-filter-btn').forEach(btn => btn.classList.remove('active'));
+            const clearBtn = hazardPanel.querySelector('.hazard-filter-clear');
+            if (clearBtn) clearBtn.classList.add('active');
+        }
+        if (IS_MOBILE) {
+            const mobileHazardToggle = document.getElementById('mobileHazardToggle');
+            if (mobileHazardToggle) mobileHazardToggle.style.display = isSafety ? 'flex' : 'none';
+            if (!isSafety && this._closeMobileHazardPanel) this._closeMobileHazardPanel();
+        }
+
+        this.currentHotspotIndex = -1;
+        const titleDisplay = document.getElementById('currentHotspotTitle');
+        if (titleDisplay) titleDisplay.textContent = 'Click a hotspot or use arrows';
+
+        if (this.selectedHotspot) {
+            this.selectedHotspot.info.style.display = 'none';
+            this.selectedHotspot.info.classList.remove('active');
+            if (this.outlineEffect && this.outlineEffect.selection) {
+                this.outlineEffect.selection.clear();
+            }
+            this.selectedHotspot = null;
+        }
+
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.mode === this.activeMode);
+        });
+
+        this.animateCameraReset();
+        this.clearVisitedState();
+        if (this.activeMode === 'LOTO') this.setModeLabel('Lockout/Tagout', 'Explore');
+        else if (isSafety) this.setModeLabel('Safety Map');
+        else this.setModeLabel(null);
+        const navUI = document.querySelector('.navigation-ui');
+        if (navUI) navUI.style.display = '';
+
+        this.needsUpdate = true;
+    }
+
+    setupModeOverlay() {
+        document.getElementById('overlayLOTOBtn').addEventListener('click', () => {
+            document.getElementById('overlayPanel1').style.display = 'none';
+            document.getElementById('overlayPanel2').style.display = 'flex';
+        });
+
+        document.getElementById('overlaySafetyBtn').addEventListener('click', () => {
+            this.activeMode = 'safety';
+            this.walkThroughMode = false;
+            this.activeHazardFilter = null;
+            this.allHotspots = this.allHotspotsAll.filter(h => h.mode === 'safety');
+            this.currentHotspotIndex = -1;
+            const titleDisplay = document.getElementById('currentHotspotTitle');
+            if (titleDisplay) titleDisplay.textContent = 'Click a hotspot or use arrows';
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === 'safety');
+            });
+            this.animateCameraReset();
+            this.clearVisitedState();
+            this.setModeLabel('Safety Map');
+            const navUI = document.querySelector('.navigation-ui');
+            if (navUI) navUI.style.display = '';
+            const hazardPanel = document.getElementById('hazardFilter');
+            if (hazardPanel) {
+                hazardPanel.style.display = IS_MOBILE ? 'none' : 'flex';
+                hazardPanel.querySelectorAll('.hazard-filter-btn').forEach(btn => btn.classList.remove('active'));
+                const clearBtn = hazardPanel.querySelector('.hazard-filter-clear');
+                if (clearBtn) clearBtn.classList.add('active');
+            }
+            if (IS_MOBILE) {
+                const mobileHazardToggle = document.getElementById('mobileHazardToggle');
+                if (mobileHazardToggle) mobileHazardToggle.style.display = 'flex';
+            }
+            this.needsUpdate = true;
+            this.hideOverlay();
+        });
+
+        document.getElementById('overlayWalkBtn').addEventListener('click', () => {
+            this.startWalkThrough();
+        });
+
+        document.getElementById('overlayExploreBtn').addEventListener('click', () => {
+            this.activeMode = 'LOTO';
+            this.walkThroughMode = false;
+            this.allHotspots = this.allHotspotsAll.filter(h => h.mode === 'LOTO');
+            this.currentHotspotIndex = -1;
+            const titleDisplay = document.getElementById('currentHotspotTitle');
+            if (titleDisplay) titleDisplay.textContent = 'Click a hotspot or use arrows';
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === 'LOTO');
+            });
+            this.animateCameraReset();
+            this.clearVisitedState();
+            this.setModeLabel('Lockout/Tagout', 'Explore');
+            const navUI2 = document.querySelector('.navigation-ui');
+            if (navUI2) navUI2.style.display = '';
+            this.needsUpdate = true;
+            this.hideOverlay();
+        });
+
+        document.getElementById('overlayBackBtn').addEventListener('click', () => {
+            document.getElementById('overlayPanel2').style.display = 'none';
+            document.getElementById('overlayPanel1').style.display = 'flex';
+        });
+
+        document.getElementById('modeBtn').addEventListener('click', () => {
+            this.showOverlay(1);
+        });
+
+        document.getElementById('overlayCloseBtn').addEventListener('click', () => {
+            this.hideOverlay();
+        });
+    }
+
+    showOverlay(panel) {
+        // Deselect any open hotspot
+        if (this.selectedHotspot) {
+            this.selectedHotspot.info.style.display = 'none';
+            this.selectedHotspot.info.classList.remove('active');
+            this.selectedHotspot = null;
+        }
+        if (this.outlineEffect && this.outlineEffect.selection) {
+            this.outlineEffect.selection.clear();
+        }
+        // Hide all step navs
+        document.querySelectorAll('.step-nav-arrows').forEach(nav => {
+            nav.style.display = 'none';
+        });
+        if (IS_MOBILE) {
+            const msn = document.getElementById('mobileStepNav');
+            if (msn) msn.style.display = 'none';
+            const mobileHazardToggle = document.getElementById('mobileHazardToggle');
+            if (mobileHazardToggle) mobileHazardToggle.style.display = 'none';
+            if (this._closeMobileHazardPanel) this._closeMobileHazardPanel();
+        }
+        // Reset mode state
+        this.activeMode = null;
+        this.walkThroughMode = false;
+        this.activeHazardFilter = null;
+        const hazardPanel = document.getElementById('hazardFilter');
+        if (hazardPanel) hazardPanel.style.display = 'none';
+        this.allHotspots = [...this.allHotspotsAll];
+        this.currentHotspotIndex = -1;
+        const titleDisplay = document.getElementById('currentHotspotTitle');
+        if (titleDisplay) titleDisplay.textContent = 'Click a hotspot or use arrows';
+        document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+        this.needsUpdate = true;
+
+        // Reset camera and visited state
+        this.animateCameraReset();
+        this.clearVisitedState();
+        this.setModeLabel(null);
+
+        // Hide bottom navigation while overlay is visible
+        const navUI = document.querySelector('.navigation-ui');
+        if (navUI) navUI.style.display = 'none';
+
+        // Update mode button icon to active
+        const modeIcon = document.getElementById('modeIcon');
+        if (modeIcon) modeIcon.src = 'media/Grid_active.svg';
+
+        // Show correct panel
+        const p1 = document.getElementById('overlayPanel1');
+        const p2 = document.getElementById('overlayPanel2');
+        if (p1) p1.style.display = panel === 1 ? 'flex' : 'none';
+        if (p2) p2.style.display = panel === 2 ? 'flex' : 'none';
+        document.getElementById('modeOverlay').style.display = 'flex';
+    }
+
+    hideOverlay() {
+        document.getElementById('modeOverlay').style.display = 'none';
+        const modeIcon = document.getElementById('modeIcon');
+        if (modeIcon) modeIcon.src = 'media/Grid_default.svg';
+    }
+
+    startWalkThrough() {
+        this.walkThroughMode = true;
+        this.activeMode = 'LOTO';
+        this.walkThroughSteps = this.allHotspotsAll
+            .filter(h => h.mode === 'LOTO' && h.step !== undefined)
+            .sort((a, b) => a.step - b.step);
+        this.allHotspots = [...this.walkThroughSteps];
+        this.currentWalkStep = 0;
+        this.currentHotspotIndex = 0;
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.mode === 'LOTO');
+        });
+        this.clearVisitedState();
+        this.setModeLabel('Lockout/Tagout', 'Walk-Through');
+        const navUI = document.querySelector('.navigation-ui');
+        if (navUI) navUI.style.display = 'none';
+        if (IS_MOBILE) {
+            const mobileHazardToggle = document.getElementById('mobileHazardToggle');
+            if (mobileHazardToggle) mobileHazardToggle.style.display = 'none';
+        }
+        this.hideOverlay();
+        this.goToWalkStep(0);
+    }
+
+    goToWalkStep(index) {
+        if (index < 0 || index >= this.walkThroughSteps.length) return;
+        this.currentWalkStep = index;
+        this.currentHotspotIndex = index;
+        const stepData = this.walkThroughSteps[index];
+        const hotspot = this.hotspots.find(h => h.data.node === stepData.node);
+        if (hotspot) this.handleHotspotClick(hotspot);
+    }
+
+    navigateWalkStep(dir) {
+        this.goToWalkStep(this.currentWalkStep + dir);
+    }
+
+    updateStepNavDisplay() {
+        document.querySelectorAll('.step-nav-arrows').forEach(nav => nav.style.display = 'none');
+
+        if (!this.walkThroughMode || !this.selectedHotspot || this.selectedHotspot.data.step === undefined) {
+            if (IS_MOBILE) {
+                const msn = document.getElementById('mobileStepNav');
+                if (msn) msn.style.display = 'none';
+            }
+            return;
+        }
+
+        const isLastStep = this.currentWalkStep === this.walkThroughSteps.length - 1;
+        const stepText = `Step ${this.selectedHotspot.data.step} of ${this.walkThroughSteps.length}`;
+
+        if (IS_MOBILE) {
+            const msn = document.getElementById('mobileStepNav');
+            if (msn) msn.style.display = 'flex';
+            const prev = document.getElementById('mobileStepPrev');
+            const next = document.getElementById('mobileStepNext');
+            const ind = document.getElementById('mobileStepIndicator');
+            const done = document.getElementById('mobileStepDone');
+            if (prev) { prev.style.opacity = this.currentWalkStep > 0 ? '' : '0'; prev.style.pointerEvents = this.currentWalkStep > 0 ? '' : 'none'; }
+            if (next) { next.style.opacity = !isLastStep ? '' : '0'; next.style.pointerEvents = !isLastStep ? '' : 'none'; }
+            if (ind) ind.textContent = stepText;
+            if (done) done.style.display = isLastStep ? 'flex' : 'none';
+            return;
+        }
+
+        // Desktop: update in-panel step nav
+        const stepNav = this.selectedHotspot.info.querySelector('.step-nav-arrows');
+        if (!stepNav) return;
+        stepNav.style.display = 'flex';
+        const prevBtn = stepNav.querySelector('.step-prev');
+        const nextBtn = stepNav.querySelector('.step-next');
+        const indicator = stepNav.querySelector('.step-indicator');
+        prevBtn.style.opacity = this.currentWalkStep > 0 ? '' : '0';
+        prevBtn.style.pointerEvents = this.currentWalkStep > 0 ? '' : 'none';
+        nextBtn.style.opacity = !isLastStep ? '' : '0';
+        nextBtn.style.pointerEvents = !isLastStep ? '' : 'none';
+        indicator.textContent = stepText;
+        const doneBtn = stepNav.querySelector('.step-done-btn');
+        if (doneBtn) doneBtn.style.display = isLastStep ? 'flex' : 'none';
+    }
+
+    setModeLabel(text, subtitle = null) {
+        const label = document.getElementById('modeLabel');
+        if (!label) return;
+        if (text) {
+            label.innerHTML = `<span class="mode-label-title">${text}</span>${subtitle ? `<span class="mode-label-sub">${subtitle}</span>` : ''}`;
+            label.style.display = '';
+        } else {
+            label.style.display = 'none';
+        }
+    }
+
+    animateCameraReset() {
+        if (!this.initialCameraPosition) return;
+        this._camAnim = {
+            startPos: this.camera.position.clone(),
+            endPos: this.initialCameraPosition.clone(),
+            startTarget: this.controls.target.clone(),
+            endTarget: this.initialCameraTarget.clone(),
+            startQuat: null,
+            endQuat: null,
+            startTime: Date.now(),
+            duration: 2000,
+        };
+    }
+
+    clearVisitedState() {
+        this.visitedHotspots.clear();
+        this.hotspots.forEach(h => {
+            if (h.element) {
+                h.element.classList.remove('visited');
+                h.element.style.backgroundImage = `url('${h.data.icon || 'media/Info_default.png'}')`;
+            }
+        });
+    }
+
     setupTechSpecToggle() {
         const button = document.getElementById('techSpecBtn');
         const icon = document.getElementById('techSpecIcon');
         const modal = document.getElementById('specModal');
         const content = document.getElementById('specContent');
         const closeIcon = document.getElementById('closeSpecIcon');
+        if (!button) return;
 
         let isVisible = false;
 
