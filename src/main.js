@@ -53,15 +53,18 @@ class HotspotManager {
         this.needsUpdate = false;
         this.frameCount = 0;
         this._camAnim = null; // single camera animation state — driven by main loop
+        this._lastFrameTime = 0;
+        this.outlineEnabled = false; // flip to true to re-enable selection glow
 
         // Performance settings
         this.LOD_DISTANCE = IS_MOBILE ? 15 : 10;
         this.CULL_DISTANCE = IS_MOBILE ? 30 : 50;
         this.targetFPS = IS_MOBILE ? 30 : 60;
+        this._frameBudget = 1000 / this.targetFPS;
 
         // Simple raycast optimization
         this.raycastFrameCount = 0;
-        this.raycastInterval = IS_MOBILE ? 8 : 5; // Check occlusion every N frames
+        this.raycastInterval = IS_MOBILE ? 15 : 10; // Check occlusion every N frames
         this.lastOcclusionResults = new Map(); // Simple cache for smoother transitions
 
         // Object pooling
@@ -117,7 +120,7 @@ class HotspotManager {
         // Highly optimized renderer
         this.renderer = new WebGLRenderer({
             powerPreference: "high-performance",
-            antialias: !IS_MOBILE && window.devicePixelRatio <= 1,
+            antialias: false, // SMAA via postprocessing handles AA — hardware MSAA would double the cost
             stencil: false,
             depth: true,
             alpha: false,
@@ -308,8 +311,7 @@ class HotspotManager {
 
         // Performance monitoring setup
         if (!IS_MOBILE) {
-            this.stats = new Stats();
-            // Uncomment to show FPS counter
+            // this.stats = new Stats();
             // document.body.appendChild(this.stats.dom);
         }
         // Start animation loop
@@ -739,8 +741,10 @@ class HotspotManager {
             }
 
             if (meshesToSelect.length > 0) {
-                this.outlineEffect.selection.set(meshesToSelect);
-                this.animateOutlineEdgeStrength(0, 3, 1500);
+                if (this.outlineEnabled) {
+                    this.outlineEffect.selection.set(meshesToSelect);
+                    this.animateOutlineEdgeStrength(0, 3, 1500);
+                }
                 console.log('✔ Outline applied to:', meshesToSelect.map(m => m.name));
             } else {
                 console.warn('❌ No mesh found to apply outline for:', hotspotData.node);
@@ -1396,18 +1400,27 @@ class HotspotManager {
             }
             this.controls.target.lerpVectors(a.startTarget, a.endTarget, ease);
             this.needsUpdate = true;
-            if (t >= 1) this._camAnim = null;
+            if (t >= 1) {
+                this._camAnim = null;
+                // Force raycast on next frame so hotspots appear immediately at landing position
+                this.raycastFrameCount = this.raycastInterval;
+            }
         }
 
         // Apply damping — fires 'change' event each frame while settling,
         // which sets this.cameraChanged = true via the listener below
         this.controls.update();
 
+        // FPS cap — gate renders to targetFPS regardless of display refresh rate
+        const now = performance.now();
+        if (now - this._lastFrameTime < this._frameBudget) return;
+        this._lastFrameTime = now;
+
         const shouldRefresh = this.cameraChanged || this.needsUpdate;
         if (shouldRefresh) {
             this.updateHotspotPositions();
-            // Use full composer pass only when an outline is active
-            const hasOutline = this.outlineEffect?.selection.size > 0;
+            // Skip composer during camera animation — SMAA+outline at full rAF rate kills GPU mid-flight
+            const hasOutline = !this._camAnim && this.outlineEffect?.selection.size > 0;
             if (hasOutline) {
                 this.composer.render();
             } else {
@@ -1417,6 +1430,7 @@ class HotspotManager {
             this.needsUpdate = false;
         }
 
+        // Stats inside frame budget so it measures actual render rate, not rAF rate
         if (!IS_MOBILE && this.stats) {
             this.stats.update();
         }
@@ -1466,10 +1480,14 @@ class HotspotManager {
             const x = (screenPosition.x + 1) * viewW / 2;
             const y = (-screenPosition.y + 1) * viewH / 2;
 
-            // Raycast occlusion — only recompute every N frames, use cache otherwise
-            // Increase tolerance to be less sensitive (show fewer hidden callouts)
+            // During camera animation or LOTO mode, skip raycast.
+            // LOTO lockout points are on all sides of the machine — occlusion from the default
+            // angle incorrectly hides most of them. isBehindCamera/isInView are sufficient.
             let isOccluded;
-            if (shouldRaycast) {
+            const skipOcclusion = this._camAnim || this.activeMode === 'LOTO';
+            if (skipOcclusion) {
+                isOccluded = false;
+            } else if (shouldRaycast) {
                 const direction = worldPosition.clone().sub(this.camera.position).normalize();
                 this.raycaster.set(this.camera.position, direction);
                 const intersects = this.raycaster.intersectObjects(this.interactiveMeshes, true)
