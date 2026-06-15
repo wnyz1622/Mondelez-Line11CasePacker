@@ -66,6 +66,7 @@ class HotspotManager {
         this.raycastFrameCount = 0;
         this.raycastInterval = IS_MOBILE ? 15 : 10; // Check occlusion every N frames
         this.lastOcclusionResults = new Map(); // Simple cache for smoother transitions
+        this.isOrbiting = false;
 
         // Object pooling
         this.raycaster = new THREE.Raycaster();
@@ -252,6 +253,8 @@ class HotspotManager {
         this.controls.enablePan = true; // Disable panning to keep focus on the model
         this.controls.target.y = 0; // Keep the orbit target at floor level
         let controlsUpdateTimeout = null;
+        this.controls.addEventListener('start', () => { this.isOrbiting = true; });
+        this.controls.addEventListener('end', () => { this.isOrbiting = false; });
         // Keep target from going below floor
         this.controls.addEventListener('change', () => {
             if (this.controls.target.y < -5.3) {
@@ -359,7 +362,7 @@ class HotspotManager {
             };
 
 
-            const modelPath = 'media/model/Line11CasePacker_v2.glb';
+            const modelPath = 'media/model/Line11CasePacker_v3.glb';
             console.log('Loading model from:', modelPath);
 
             // this.loader.load(modelPath, (gltf) => {
@@ -1484,14 +1487,14 @@ class HotspotManager {
             // LOTO lockout points are on all sides of the machine — occlusion from the default
             // angle incorrectly hides most of them. isBehindCamera/isInView are sufficient.
             let isOccluded;
-            const skipOcclusion = this._camAnim || this.activeMode === 'LOTO';
+            const skipOcclusion = this._camAnim || this.activeMode === 'LOTO' || this.isOrbiting;
             if (skipOcclusion) {
                 isOccluded = false;
             } else if (shouldRaycast) {
                 const direction = worldPosition.clone().sub(this.camera.position).normalize();
                 this.raycaster.set(this.camera.position, direction);
                 const intersects = this.raycaster.intersectObjects(this.interactiveMeshes, true)
-                    .filter(hit => hit.object.name !== 'SM_PackingMachine_v03_M_Glass_0');
+                    .filter(hit => !hit.object.name.includes('M_Glass'));
                 const distanceToHotspot = this.camera.position.distanceTo(worldPosition);
                 isOccluded = intersects.length > 0 && intersects[0].distance + 0.1 < distanceToHotspot;
                 this.lastOcclusionResults.set(hotspot, isOccluded);
