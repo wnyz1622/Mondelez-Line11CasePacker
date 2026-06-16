@@ -103,8 +103,8 @@ class HotspotManager {
         gradientCanvas.height = IS_MOBILE ? 128 : 256; // Smaller on mobile
         const ctx = gradientCanvas.getContext('2d');
         const gradient = ctx.createLinearGradient(0, 0, 0, 256);
-        gradient.addColorStop(0, '#7C7C7C'); // bottom - white
-        gradient.addColorStop(1, '#ffffff'); // top - light grey
+        gradient.addColorStop(0, '#F7F4F2'); // bottom - white
+        gradient.addColorStop(1, '#f0f0f0'); // top - light grey
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, 1, gradientCanvas.height);
         const gradientTexture = new THREE.CanvasTexture(gradientCanvas);
@@ -362,7 +362,7 @@ class HotspotManager {
             };
 
 
-            const modelPath = 'media/model/Line11CasePacker_v3.glb';
+            const modelPath = 'media/model/Line11CasePacker_v4.glb';
             console.log('Loading model from:', modelPath);
 
             // this.loader.load(modelPath, (gltf) => {
@@ -383,6 +383,19 @@ class HotspotManager {
                     // Store meshIndex for each mesh so we can reference default material later
                     gltf.scene.traverse((obj) => {
                         if (obj.isMesh) {
+                            // boost metalness
+                            obj.material.envMapIntensity = 1.5;
+                            obj.material.needsUpdate = true;
+
+                            // make glass more transparent
+                            if (obj.material.name.includes('Glass') ||
+                                obj.material.name.includes('glass')) {
+                                obj.material.transparent = true;
+                                obj.material.opacity = 0.08;        // 0 = invisible, 1 = fully opaque
+                                obj.material.depthWrite = false;    // prevents z-fighting on transparent surfaces
+                                obj.material.needsUpdate = true;
+                            }
+
                             if (gltf.parser.json.meshes) {
                                 const meshDefIndex = gltf.parser.json.meshes.findIndex(mesh => mesh.name === obj.name);
                                 if (meshDefIndex !== -1) {
