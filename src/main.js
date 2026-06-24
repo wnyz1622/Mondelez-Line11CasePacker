@@ -776,6 +776,12 @@ class HotspotManager {
             this.updateTitleDisplay();
         }
 
+        // Sync hazard filter highlight — dimmed orange indicator (no filter applied)
+        if (this.activeMode === 'safety' && !this.activeHazardFilter) {
+            document.querySelectorAll('.hazard-filter-btn').forEach(b => b.classList.remove('navigating'));
+            document.querySelectorAll(`.hazard-filter-btn[data-hazard="${hotspotData.title}"]`).forEach(b => b.classList.add('navigating'));
+        }
+
         if (this.walkThroughMode) {
             if (hotspotData.step !== undefined) {
                 const stepIdx = this.walkThroughSteps.findIndex(s => s.node === hotspotData.node);
@@ -996,6 +1002,7 @@ class HotspotManager {
                 </div>
                 <div class="bottom-blocker"></div>
             `;
+            this._restructureHazardInfo(infoDiv);
             document.body.appendChild(infoDiv);
 
             // Add step-nav arrows for walk-through mode (step hotspots only)
@@ -1086,6 +1093,7 @@ class HotspotManager {
                 this.hotspots.forEach(h => {
                     if (h !== hotspot && h !== this.selectedHotspot) {
                         h.info.style.display = 'none';
+                        h.info.style.zIndex = '';
                     }
                 });
 
@@ -1095,10 +1103,13 @@ class HotspotManager {
                         : `url('${hotspotData.iconSelected || hotspotData.icon || 'media/Info_Selected.png'}')`;
                 }
 
+                // Always raise hovered panel above any open active panel
+                infoDiv.style.zIndex = '1006';
                 infoDiv.style.display = 'block';
             });
 
             hotspotDiv.addEventListener('mouseleave', () => {
+                infoDiv.style.zIndex = '';
                 if (this.selectedHotspot === hotspot) {
                     hotspotDiv.style.backgroundImage = hotspotData.type === "animation"
                         ? `url('media/door_selected.png')`
@@ -1166,21 +1177,34 @@ class HotspotManager {
 
         buildButtons(desktopPanel);
 
-        if (IS_MOBILE) {
-            const mobilePanel = document.getElementById('mobileHazardPanel');
-            if (mobilePanel) buildButtons(mobilePanel);
+        const mobilePanel = document.getElementById('mobileHazardPanel');
+        if (mobilePanel) buildButtons(mobilePanel);
 
-            const toggle = document.getElementById('mobileHazardToggle');
-            const mobilePanel2 = document.getElementById('mobileHazardPanel');
-            const overlay = document.getElementById('mobileHazardOverlay');
-            if (toggle && !toggle._setupDone) {
-                toggle._setupDone = true;
-                const openPanel = () => { mobilePanel2.classList.add('open'); overlay.classList.add('open'); toggle.textContent = '×'; };
-                const closePanel = () => { mobilePanel2.classList.remove('open'); overlay.classList.remove('open'); toggle.textContent = '+'; };
-                toggle.addEventListener('click', () => mobilePanel2.classList.contains('open') ? closePanel() : openPanel());
-                overlay.addEventListener('click', closePanel);
-                this._closeMobileHazardPanel = closePanel;
-            }
+        const toggle = document.getElementById('mobileHazardToggle');
+        const mobilePanel2 = document.getElementById('mobileHazardPanel');
+        const overlay = document.getElementById('mobileHazardOverlay');
+        if (toggle && !toggle._setupDone) {
+            toggle._setupDone = true;
+            const openPanel = () => {
+                mobilePanel2.classList.add('open');
+                // Only show overlay on mobile/narrow viewports (tap-outside-to-dismiss)
+                // On desktop the overlay would block nav buttons and 3D clicks at z-index 1590
+                const _vw = window.innerWidth, _vh = window.innerHeight;
+                const isNarrow = _vw < 600 || _vh < 400 || (_vw > _vh && _vw <= 900);
+                if (isNarrow) overlay.classList.add('open');
+                toggle.textContent = '×';
+            };
+            const closePanel = () => { mobilePanel2.classList.remove('open'); overlay.classList.remove('open'); toggle.textContent = '+'; };
+            toggle.addEventListener('click', () => mobilePanel2.classList.contains('open') ? closePanel() : openPanel());
+            overlay.addEventListener('click', closePanel);
+            this._closeMobileHazardPanel = closePanel;
+
+            // Add explicit close button inside the panel
+            const closeX = document.createElement('button');
+            closeX.className = 'hazard-panel-close';
+            closeX.textContent = '×';
+            closeX.addEventListener('click', closePanel);
+            mobilePanel2.insertBefore(closeX, mobilePanel2.firstChild);
         }
     }
 
@@ -1193,8 +1217,8 @@ class HotspotManager {
 
         document.querySelectorAll('.hazard-filter-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.hazard === title);
+            btn.classList.remove('navigating');
         });
-        if (IS_MOBILE && this._closeMobileHazardPanel) this._closeMobileHazardPanel();
 
         if (this.selectedHotspot && this.selectedHotspot.data.title !== title) {
             this.selectedHotspot.element.classList.add('visited');
@@ -1205,6 +1229,13 @@ class HotspotManager {
                 this.outlineEffect.selection.clear();
             }
             this.selectedHotspot = null;
+        }
+
+        // Auto-collapse filter panel on mobile/narrow viewports (viewport-width based, works in DevTools too)
+        const _vw = window.innerWidth, _vh = window.innerHeight;
+        const isMobileViewport = _vw < 600 || _vh < 400 || (_vw > _vh && _vw <= 900);
+        if (isMobileViewport && this._closeMobileHazardPanel) {
+            this._closeMobileHazardPanel();
         }
 
         // Fly camera to first hotspot of this type and open its info panel
@@ -1225,7 +1256,7 @@ class HotspotManager {
 
         document.querySelectorAll('.hazard-filter-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.hazard-filter-clear').forEach(btn => btn.classList.add('active'));
-        if (IS_MOBILE && this._closeMobileHazardPanel) this._closeMobileHazardPanel();
+        document.querySelectorAll('.hazard-filter-btn').forEach(btn => btn.classList.remove('navigating'));
 
         if (this.selectedHotspot) {
             this.selectedHotspot.element.classList.add('visited');
@@ -1470,6 +1501,68 @@ class HotspotManager {
         animate();
     }
 
+    _restructureHazardInfo(infoDiv) {
+        const textScroll = infoDiv.querySelector('.text-scroll');
+        const desc = infoDiv.querySelector('.hotspot-description');
+        if (!textScroll || !desc) return;
+
+        const hazardHeader = desc.querySelector('.hazard-header');
+        if (!hazardHeader) return;
+
+        const icon = hazardHeader.querySelector(':scope > .hazard-icon');
+        const innerDiv = hazardHeader.querySelector(':scope > div');
+        if (!innerDiv) return;
+        const titleEl = innerDiv.querySelector(':scope > .hazard-title');
+
+        // Collect body nodes: everything in innerDiv after hazard-title
+        const bodyNodes = [];
+        let pastTitle = !titleEl;
+        Array.from(innerDiv.childNodes).forEach(node => {
+            if (node === titleEl) { pastTitle = true; return; }
+            if (pastTitle) bodyNodes.push(node);
+        });
+
+        // Build fixed header element (goes first in text-scroll, sticky)
+        const fixedHdr = document.createElement('div');
+        fixedHdr.className = 'hazard-fixed-header';
+        if (icon) fixedHdr.appendChild(icon);
+        const hdrText = document.createElement('div');
+        if (titleEl) hdrText.appendChild(titleEl);
+        fixedHdr.appendChild(hdrText);
+
+        // Build scrollable body wrapper — skip leading <br>/whitespace nodes left after extracting title
+        const bodyWrap = document.createElement('div');
+        bodyWrap.className = 'hazard-body';
+        let bodyStart = 0;
+        while (bodyStart < bodyNodes.length) {
+            const n = bodyNodes[bodyStart];
+            if (n.nodeType === Node.ELEMENT_NODE && n.tagName === 'BR') { bodyStart++; }
+            else if (n.nodeType === Node.TEXT_NODE && n.textContent.trim() === '') { bodyStart++; }
+            else { break; }
+        }
+        bodyNodes.slice(bodyStart).forEach(n => bodyWrap.appendChild(n));
+
+        // Replace hotspot-description content with body only
+        hazardHeader.remove();
+        desc.appendChild(bodyWrap);
+
+        // Insert fixed header BEFORE text-scroll (outside scroll container)
+        // so scrollbar only appears alongside body content, not the header
+        infoDiv.insertBefore(fixedHdr, textScroll);
+    }
+
+    _clampInfoPos(x, rawLeft, top, el, viewW, viewH) {
+        const NAV_H = 65;
+        const MARGIN = 10;
+        const V_TOP = 80;
+        const h = el.offsetHeight || 200;
+        // Always position to the right of the hotspot — no flip, edge clip is acceptable
+        const l = Math.max(MARGIN, rawLeft);
+        let t = Math.min(top, viewH - h - NAV_H);
+        t = Math.max(V_TOP, t);
+        return { left: l, top: t };
+    }
+
     updateHotspotPositions() {
         if (!this.hotspots) return;
 
@@ -1481,7 +1574,8 @@ class HotspotManager {
         // Cache once per update — avoids repeated DOM reads inside the loop
         const viewW = window.innerWidth;
         const viewH = window.innerHeight;
-        const isMobileView = viewW < 600 || viewH < 400;
+        // Include landscape phones/tablets (width<=900, landscape orientation)
+        const isMobileView = viewW < 600 || viewH < 400 || (viewW > viewH && viewW <= 900);
 
         this.hotspots.forEach((hotspot) => {
             const worldPosition = new THREE.Vector3();
@@ -1538,10 +1632,15 @@ class HotspotManager {
             }
 
             // Handle info panel
-            const showInfo = shouldShow && (hotspot === this.selectedHotspot || hotspot.element.matches(':hover'));
+            const isHoverOnly = hotspot !== this.selectedHotspot && hotspot.element.matches(':hover');
+            // Hide hover title if it would overflow the right edge (no-wrap title, let edge clip = off)
+            const hoverClips = isHoverOnly && (x + 30 + (hotspot.info.offsetWidth || 150) > viewW);
+            const showInfo = shouldShow && (hotspot === this.selectedHotspot || (isHoverOnly && !hoverClips));
             hotspot.info.style.display = showInfo ? 'block' : 'none';
 
-            const infoLeft = x + 20;
+            const infoLeft = x + 30;
+            // Active panel sits 10px higher than the hotspot; hover title stays at hotspot y
+            const infoTop = y;
             if (isMobileView) {
                 if (hotspot === this.selectedHotspot) {
                     hotspot.info.classList.add('mobile-fixed');
@@ -1551,13 +1650,15 @@ class HotspotManager {
                     hotspot._lastInfoTop = null;
                 } else {
                     hotspot.info.classList.remove('mobile-fixed');
-                    if (hotspot._lastInfoLeft !== infoLeft) { hotspot.info.style.left = `${infoLeft}px`; hotspot._lastInfoLeft = infoLeft; }
-                    if (hotspot._lastInfoTop !== y) { hotspot.info.style.top = `${y}px`; hotspot._lastInfoTop = y; }
+                    const { left: cl, top: ct } = this._clampInfoPos(x, infoLeft, infoTop, hotspot.info, viewW, viewH);
+                    if (hotspot._lastInfoLeft !== cl) { hotspot.info.style.left = `${cl}px`; hotspot._lastInfoLeft = cl; }
+                    if (hotspot._lastInfoTop !== ct) { hotspot.info.style.top = `${ct}px`; hotspot._lastInfoTop = ct; }
                 }
             } else {
                 hotspot.info.classList.remove('mobile-fixed');
-                if (hotspot._lastInfoLeft !== infoLeft) { hotspot.info.style.left = `${infoLeft}px`; hotspot._lastInfoLeft = infoLeft; }
-                if (hotspot._lastInfoTop !== y) { hotspot.info.style.top = `${y}px`; hotspot._lastInfoTop = y; }
+                const { left: cl, top: ct } = this._clampInfoPos(x, infoLeft, infoTop, hotspot.info, viewW, viewH);
+                if (hotspot._lastInfoLeft !== cl) { hotspot.info.style.left = `${cl}px`; hotspot._lastInfoLeft = cl; }
+                if (hotspot._lastInfoTop !== ct) { hotspot.info.style.top = `${ct}px`; hotspot._lastInfoTop = ct; }
             }
         });
     }
@@ -1726,16 +1827,14 @@ class HotspotManager {
         const isSafety = this.activeMode === 'safety';
         const hazardPanel = document.getElementById('hazardFilter');
         if (hazardPanel) {
-            hazardPanel.style.display = !IS_MOBILE && isSafety ? 'flex' : 'none';
+            hazardPanel.style.display = 'none';
             hazardPanel.querySelectorAll('.hazard-filter-btn').forEach(btn => btn.classList.remove('active'));
             const clearBtn = hazardPanel.querySelector('.hazard-filter-clear');
             if (clearBtn) clearBtn.classList.add('active');
         }
-        if (IS_MOBILE) {
-            const mobileHazardToggle = document.getElementById('mobileHazardToggle');
-            if (mobileHazardToggle) mobileHazardToggle.style.display = isSafety ? 'flex' : 'none';
-            if (!isSafety && this._closeMobileHazardPanel) this._closeMobileHazardPanel();
-        }
+        const hazardToggle = document.getElementById('mobileHazardToggle');
+        if (hazardToggle) hazardToggle.style.display = isSafety ? 'flex' : 'none';
+        if (!isSafety && this._closeMobileHazardPanel) this._closeMobileHazardPanel();
 
         this.currentHotspotIndex = -1;
         const titleDisplay = document.getElementById('currentHotspotTitle');
@@ -1762,6 +1861,7 @@ class HotspotManager {
         const navUI = document.querySelector('.navigation-ui');
         if (navUI) navUI.style.display = '';
 
+        this._updateMobileHeaderVisibility(!!this.activeMode);
         this.needsUpdate = true;
     }
 
@@ -1789,17 +1889,16 @@ class HotspotManager {
             if (navUI) navUI.style.display = '';
             const hazardPanel = document.getElementById('hazardFilter');
             if (hazardPanel) {
-                hazardPanel.style.display = IS_MOBILE ? 'none' : 'flex';
+                hazardPanel.style.display = 'none';
                 hazardPanel.querySelectorAll('.hazard-filter-btn').forEach(btn => btn.classList.remove('active'));
                 const clearBtn = hazardPanel.querySelector('.hazard-filter-clear');
                 if (clearBtn) clearBtn.classList.add('active');
             }
-            if (IS_MOBILE) {
-                const mobileHazardToggle = document.getElementById('mobileHazardToggle');
-                if (mobileHazardToggle) mobileHazardToggle.style.display = 'flex';
-            }
+            const safetyToggle = document.getElementById('mobileHazardToggle');
+            if (safetyToggle) safetyToggle.style.display = 'flex';
             this.needsUpdate = true;
             this.hideOverlay();
+            this._updateMobileHeaderVisibility(true);
         });
 
         document.getElementById('overlayWalkBtn').addEventListener('click', () => {
@@ -1823,6 +1922,7 @@ class HotspotManager {
             if (navUI2) navUI2.style.display = '';
             this.needsUpdate = true;
             this.hideOverlay();
+            this._updateMobileHeaderVisibility(true);
         });
 
         document.getElementById('overlayBackBtn').addEventListener('click', () => {
@@ -1853,13 +1953,14 @@ class HotspotManager {
         document.querySelectorAll('.step-nav-arrows').forEach(nav => {
             nav.style.display = 'none';
         });
-        if (IS_MOBILE) {
+        {
             const msn = document.getElementById('mobileStepNav');
             if (msn) msn.style.display = 'none';
-            const mobileHazardToggle = document.getElementById('mobileHazardToggle');
-            if (mobileHazardToggle) mobileHazardToggle.style.display = 'none';
+            const hazardToggle = document.getElementById('mobileHazardToggle');
+            if (hazardToggle) hazardToggle.style.display = 'none';
             if (this._closeMobileHazardPanel) this._closeMobileHazardPanel();
         }
+        this._updateMobileHeaderVisibility(false);
         // Reset mode state
         this.activeMode = null;
         this.walkThroughMode = false;
@@ -1921,6 +2022,7 @@ class HotspotManager {
             if (mobileHazardToggle) mobileHazardToggle.style.display = 'none';
         }
         this.hideOverlay();
+        this._updateMobileHeaderVisibility(true);
         this.goToWalkStep(0);
     }
 
@@ -1989,6 +2091,31 @@ class HotspotManager {
             label.style.display = '';
         } else {
             label.style.display = 'none';
+        }
+    }
+
+    _updateMobileHeaderVisibility(modeActive) {
+        // Apply to phones in both portrait and landscape
+        const isPhone = IS_MOBILE || window.innerWidth <= 900;
+        if (!isPhone) return;
+        const toggleBtn = document.getElementById('headerToggleBtn');
+        if (modeActive) {
+            document.body.classList.add('mode-active');
+            document.body.classList.remove('titles-revealed');
+            if (toggleBtn) {
+                toggleBtn.style.display = 'flex';
+                toggleBtn.textContent = '›';
+            }
+            if (!this._headerToggleSetup && toggleBtn) {
+                this._headerToggleSetup = true;
+                toggleBtn.addEventListener('click', () => {
+                    const revealed = document.body.classList.toggle('titles-revealed');
+                    toggleBtn.textContent = revealed ? '‹' : '›';
+                });
+            }
+        } else {
+            document.body.classList.remove('mode-active', 'titles-revealed');
+            if (toggleBtn) toggleBtn.style.display = 'none';
         }
     }
 
