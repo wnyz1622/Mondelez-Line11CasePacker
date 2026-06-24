@@ -1480,8 +1480,7 @@ canvas {
     justify-content: space-between;
     align-items: center;
     margin-top: 14px;
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding: 10px;
     border-top: 1px solid #ccc;
     position: relative;
 }
