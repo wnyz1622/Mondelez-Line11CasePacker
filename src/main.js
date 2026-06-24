@@ -1507,7 +1507,25 @@ class HotspotManager {
         if (!textScroll || !desc) return;
 
         const hazardHeader = desc.querySelector('.hazard-header');
-        if (!hazardHeader) return;
+        if (!hazardHeader) {
+            // LOTO: description HTML embeds its own .hotspot-title — lift it into a fixed header.
+            // The template .hotspot-title stays in text-scroll (hidden in active via CSS; used for hover popup).
+            const descTitleEl = desc.querySelector(':scope > .hotspot-title');
+            if (!descTitleEl) return;
+            const fixedHdr = document.createElement('div');
+            fixedHdr.className = 'hazard-fixed-header';
+            fixedHdr.appendChild(descTitleEl); // moves out of description
+            // Strip leading <br>/whitespace left behind in desc after removing title
+            let node = desc.firstChild;
+            while (node) {
+                const next = node.nextSibling;
+                if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'BR') { node.remove(); node = next; }
+                else if (node.nodeType === Node.TEXT_NODE && node.textContent.trim() === '') { node.remove(); node = next; }
+                else break;
+            }
+            infoDiv.insertBefore(fixedHdr, textScroll);
+            return;
+        }
 
         const icon = hazardHeader.querySelector(':scope > .hazard-icon');
         const innerDiv = hazardHeader.querySelector(':scope > div');

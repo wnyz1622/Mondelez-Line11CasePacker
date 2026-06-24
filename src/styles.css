@@ -176,10 +176,10 @@ canvas {
 
 .hotspot-title {
     font-weight: 550;
-    font-size: 12pt;
+    font-size: 11pt;
     /* ≈26.7px */
     color: black;
-    padding-right: 0px;
+    padding-right: 10px;
     padding-bottom: 20px;
 }
 
@@ -222,11 +222,15 @@ canvas {
     align-items: flex-start;
     gap: 8px;
     color: black;
-    padding-right: 28px; /* clear the close button */
+    padding-right: 15px; /* clear the close button */
     padding-bottom: 8px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.13);
     margin-bottom: 4px;
     flex-shrink: 0;
+}
+
+.hazard-fixed-header .hotspot-title {
+    padding-bottom: 0;
 }
 
 .hotspot-info:not(.active) .hazard-fixed-header {
@@ -266,7 +270,7 @@ canvas {
 .hazard-title {
     padding: 20px 20px 0 0;
     font-weight: 550;
-    font-size: 12pt;
+    font-size: 11pt;
     color: black;
     line-height: 1.3;
 
@@ -498,6 +502,10 @@ canvas {
     line-clamp: 2;
     -webkit-box-orient: vertical;
     line-height: 1.2;
+}
+
+#headerToggleBtn {
+    display: none;
 }
 
 /* ─────────────────────────────────────────────────────────────────────── */
@@ -756,7 +764,7 @@ canvas {
 
     /* Move toggle below modeLabel when header is revealed */
     body.mode-active.titles-revealed #headerToggleBtn {
-        top: 140px;
+        top: 160px;
     }
 }
 
@@ -820,7 +828,7 @@ canvas {
     /* Fixed hazard header: shown in landscape (flex), smaller padding */
     .hotspot-info.active.mobile-fixed .hazard-fixed-header {
         display: flex !important;
-        padding: 8px 36px 8px 10px !important;
+        padding: 10px 15px 10px 15px !important;
         border-bottom: 1px solid rgba(0, 0, 0, 0.13) !important;
         margin-bottom: 0 !important;
     }
@@ -838,7 +846,7 @@ canvas {
     .hotspot-info.active.mobile-fixed .hotspot-description {
         font-size: 9pt !important;
         line-height: 1.45em !important;
-        padding: 20px 20px 20px 20px !important;
+        padding: 10px 15px 10px 15px !important;
     }
 
     .hotspot-info.active.mobile-fixed .hazard-body {
@@ -956,7 +964,7 @@ canvas {
 
     /* Move toggle below modeLabel when header is revealed */
     body.mode-active.titles-revealed #headerToggleBtn {
-        top: 140px;
+        top: 160px;
     }
 }
 
