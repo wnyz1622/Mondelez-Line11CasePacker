@@ -2122,13 +2122,13 @@ class HotspotManager {
             document.body.classList.remove('titles-revealed');
             if (toggleBtn) {
                 toggleBtn.style.display = 'flex';
-                toggleBtn.textContent = '›';
+                toggleBtn.innerHTML = '<img src="media/arrow_right.svg" alt="">';
             }
             if (!this._headerToggleSetup && toggleBtn) {
                 this._headerToggleSetup = true;
                 toggleBtn.addEventListener('click', () => {
                     const revealed = document.body.classList.toggle('titles-revealed');
-                    toggleBtn.textContent = revealed ? '‹' : '›';
+                    toggleBtn.innerHTML = revealed ? '<img src="media/arrow_left.svg" alt="">' : '<img src="media/arrow_right.svg" alt="">';
                 });
             }
         } else {
