@@ -708,7 +708,7 @@ class HotspotManager {
             const cb = hotspot.info.querySelector('.mobile-collapse-btn');
             if (cb) cb.textContent = startCollapsed ? '▴' : '▾';
             // Position before revealing — avoids 0,0 flash when style.left was cleared
-            const isMV = window.innerWidth <= 900;
+            const isMV = window.innerWidth <= 932;
             if (isMV) {
                 hotspot.info.classList.add('mobile-fixed');
                 hotspot.info.style.left = '';
@@ -1210,7 +1210,7 @@ class HotspotManager {
                 // Only show overlay on mobile/narrow viewports (tap-outside-to-dismiss)
                 // On desktop the overlay would block nav buttons and 3D clicks at z-index 1590
                 const _vw = window.innerWidth, _vh = window.innerHeight;
-                const isNarrow = _vw < 600 || _vh < 400 || (_vw > _vh && _vw <= 900);
+                const isNarrow = _vw < 600 || _vh < 400 || (_vw > _vh && _vw <= 932);
                 if (isNarrow) overlay.classList.add('open');
                 toggle.textContent = '×';
             };
@@ -1253,7 +1253,7 @@ class HotspotManager {
 
         // Auto-collapse filter panel on mobile/narrow viewports (viewport-width based, works in DevTools too)
         const _vw = window.innerWidth, _vh = window.innerHeight;
-        const isMobileViewport = _vw < 600 || _vh < 400 || (_vw > _vh && _vw <= 900);
+        const isMobileViewport = _vw < 600 || _vh < 400 || (_vw > _vh && _vw <= 932);
         if (isMobileViewport && this._closeMobileHazardPanel) {
             this._closeMobileHazardPanel();
         }
@@ -1614,7 +1614,7 @@ class HotspotManager {
         const viewW = window.innerWidth;
         const viewH = window.innerHeight;
         // Include landscape phones/tablets (width<=900, landscape orientation)
-        const isMobileView = viewW < 600 || viewH < 400 || (viewW > viewH && viewW <= 900);
+        const isMobileView = viewW < 600 || viewH < 400 || (viewW > viewH && viewW <= 932);
 
         this.hotspots.forEach((hotspot) => {
             const worldPosition = new THREE.Vector3();
@@ -2141,7 +2141,7 @@ class HotspotManager {
 
     _updateMobileHeaderVisibility(modeActive) {
         // Apply to phones in both portrait and landscape
-        const isPhone = IS_MOBILE || window.innerWidth <= 900;
+        const isPhone = IS_MOBILE || window.innerWidth <= 932;
         if (!isPhone) return;
         const toggleBtn = document.getElementById('headerToggleBtn');
         if (modeActive) {

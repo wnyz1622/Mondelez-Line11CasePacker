@@ -590,8 +590,8 @@ canvas {
         bottom: 56px;
         left: 0;
         right: 0;
-        left: 0;
         width: 100vw;
+        max-width: 100vw !important;
         height: auto;
         max-height: 55vh;
         transform: none;

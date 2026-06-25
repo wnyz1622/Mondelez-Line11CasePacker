@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(node --input-type=module)",
-      "Bash(python3 -c ' *)"
+      "Bash(python3 -c ' *)",
+      "Bash(grep -v \"//\\\\|console\\\\|1900\\\\|1932\\\\|900px\\\\|932px\")"
     ]
   }
 }
