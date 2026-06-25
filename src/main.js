@@ -1,4 +1,3 @@
-import './styles.css';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -130,11 +129,13 @@ class HotspotManager {
         });
 
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(IS_MOBILE ? 1 : Math.min(window.devicePixelRatio, 2));
+        const _isTablet = !IS_MOBILE && window.innerWidth >= 600 && window.innerWidth <= 1366;
+        this.renderer.setPixelRatio((IS_MOBILE || _isTablet) ? 1 : Math.min(window.devicePixelRatio, 2));
         this.renderer.outputColorSpace = SRGBColorSpace;
 
-        // Conditional shadows and tone mapping
-        if (!IS_MOBILE) {
+        // Conditional shadows and tone mapping — disable for mobile and tablets to reduce GPU load
+        const _isLowGPU = IS_MOBILE || (_isTablet);
+        if (!_isLowGPU) {
             this.renderer.shadowMap.enabled = true;
             this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             this.renderer.toneMapping = THREE.LinearToneMapping;
@@ -145,10 +146,16 @@ class HotspotManager {
         }
         document.getElementById('container').appendChild(this.renderer.domElement);
 
-        // WebGL context loss handler
+        // WebGL context loss: stop render loop to prevent shader errors, prompt reload
         this.renderer.domElement.addEventListener('webglcontextlost', (event) => {
             event.preventDefault();
-            alert('WebGL context lost. Please reload the page.');
+            this._contextLost = true;
+            if (confirm('Graphics context lost. Reload to restore?')) {
+                window.location.reload();
+            }
+        }, false);
+        this.renderer.domElement.addEventListener('webglcontextrestored', () => {
+            this._contextLost = false;
         }, false);
 
         // UI elements
@@ -693,18 +700,26 @@ class HotspotManager {
             ? `url('media/door_selected.png')`
             : `url('${hotspotData.icon || 'media/Info_Selected.png'}')`;
 
-        // 🚫 Don’t show panel for animation hotspots
+        // 🚫 Don't show panel for animation hotspots
         if (hotspotData.type !== 'animation') {
-            hotspot.info.style.display = 'block';
             hotspot.info.classList.add('active');
             const startCollapsed = IS_MOBILE && hotspotData.mode === 'safety';
             hotspot.info.classList.toggle('collapsed', startCollapsed);
             const cb = hotspot.info.querySelector('.mobile-collapse-btn');
             if (cb) cb.textContent = startCollapsed ? '▴' : '▾';
+            // Position before revealing — avoids 0,0 flash when style.left was cleared
+            const isMV = window.innerWidth <= 900;
+            if (isMV) {
+                hotspot.info.classList.add('mobile-fixed');
+                hotspot.info.style.left = '';
+                hotspot.info.style.top = '';
+            }
+            hotspot.info.style.display = 'block';
         } else {
             hotspot.info.style.display = 'none';
             hotspot.info.classList.remove('active');
         }
+        this.needsUpdate = true;
 
 
         // 🔁 Move to predefined camera position if available
@@ -1043,12 +1058,17 @@ class HotspotManager {
                     this.selectedHotspot.element.style.backgroundImage = this.selectedHotspot.data.type === 'animation'
                         ? `url('media/door_default.png')`
                         : `url('${this.selectedHotspot.data.icon || 'media/Info_default.png'}')`;
+                    // Force position recalc on next hover so cache-hit doesn't skip a stale left/top=''
+                    this.selectedHotspot._lastInfoLeft = null;
+                    this.selectedHotspot._lastInfoTop = null;
+                    infoDiv.classList.remove('mobile-fixed');
                     this.selectedHotspot = null;
                     // Clear outline effect
                     if (this.outlineEffect && this.outlineEffect.selection) {
                         this.outlineEffect.selection.clear();
                     }
                 }
+                this.needsUpdate = true;
             });
 
             const collapseBtn = infoDiv.querySelector('.mobile-collapse-btn');
@@ -1434,6 +1454,7 @@ class HotspotManager {
     // Optimized animation loop
     animate() {
         requestAnimationFrame(this.animate.bind(this));
+        if (this._contextLost) return;
 
         // Advance camera animation (single source of truth — no separate rAF loops)
         if (this._camAnim) {
@@ -1574,8 +1595,8 @@ class HotspotManager {
         const MARGIN = 10;
         const V_TOP = 80;
         const h = el.offsetHeight || 200;
-        // Always position to the right of the hotspot — no flip, edge clip is acceptable
-        const l = Math.max(MARGIN, rawLeft);
+        const w = el.offsetWidth || 420;
+        const l = Math.max(MARGIN, Math.min(rawLeft, viewW - w - MARGIN));
         let t = Math.min(top, viewH - h - NAV_H);
         t = Math.max(V_TOP, t);
         return { left: l, top: t };
@@ -1651,14 +1672,13 @@ class HotspotManager {
 
             // Handle info panel
             const isHoverOnly = hotspot !== this.selectedHotspot && hotspot.element.matches(':hover');
-            // Hide hover title if it would overflow the right edge (no-wrap title, let edge clip = off)
-            const hoverClips = isHoverOnly && (x + 30 + (hotspot.info.offsetWidth || 150) > viewW);
-            const showInfo = shouldShow && (hotspot === this.selectedHotspot || (isHoverOnly && !hoverClips));
-            hotspot.info.style.display = showInfo ? 'block' : 'none';
+            const showInfo = shouldShow && (hotspot === this.selectedHotspot || isHoverOnly);
 
-            const infoLeft = x + 30;
-            // Active panel sits 10px higher than the hotspot; hover title stays at hotspot y
-            const infoTop = y;
+            // Position BEFORE display — avoids flash at 0,0 when left/top were cleared
+            // (e.g. transitioning from mobile-fixed active → hover after close)
+            const infoLeft = x + 24;
+            const infoTop = y - 28;
+
             if (isMobileView) {
                 if (hotspot === this.selectedHotspot) {
                     hotspot.info.classList.add('mobile-fixed');
@@ -1668,16 +1688,22 @@ class HotspotManager {
                     hotspot._lastInfoTop = null;
                 } else {
                     hotspot.info.classList.remove('mobile-fixed');
-                    const { left: cl, top: ct } = this._clampInfoPos(x, infoLeft, infoTop, hotspot.info, viewW, viewH);
-                    if (hotspot._lastInfoLeft !== cl) { hotspot.info.style.left = `${cl}px`; hotspot._lastInfoLeft = cl; }
-                    if (hotspot._lastInfoTop !== ct) { hotspot.info.style.top = `${ct}px`; hotspot._lastInfoTop = ct; }
+                    if (hotspot._lastInfoLeft !== infoLeft) { hotspot.info.style.left = `${infoLeft}px`; hotspot._lastInfoLeft = infoLeft; }
+                    if (hotspot._lastInfoTop !== infoTop) { hotspot.info.style.top = `${infoTop}px`; hotspot._lastInfoTop = infoTop; }
                 }
             } else {
                 hotspot.info.classList.remove('mobile-fixed');
-                const { left: cl, top: ct } = this._clampInfoPos(x, infoLeft, infoTop, hotspot.info, viewW, viewH);
-                if (hotspot._lastInfoLeft !== cl) { hotspot.info.style.left = `${cl}px`; hotspot._lastInfoLeft = cl; }
-                if (hotspot._lastInfoTop !== ct) { hotspot.info.style.top = `${ct}px`; hotspot._lastInfoTop = ct; }
+                if (hotspot === this.selectedHotspot) {
+                    const { left: cl, top: ct } = this._clampInfoPos(x, infoLeft, infoTop, hotspot.info, viewW, viewH);
+                    if (hotspot._lastInfoLeft !== cl) { hotspot.info.style.left = `${cl}px`; hotspot._lastInfoLeft = cl; }
+                    if (hotspot._lastInfoTop !== ct) { hotspot.info.style.top = `${ct}px`; hotspot._lastInfoTop = ct; }
+                } else {
+                    if (hotspot._lastInfoLeft !== infoLeft) { hotspot.info.style.left = `${infoLeft}px`; hotspot._lastInfoLeft = infoLeft; }
+                    if (hotspot._lastInfoTop !== infoTop) { hotspot.info.style.top = `${infoTop}px`; hotspot._lastInfoTop = infoTop; }
+                }
             }
+
+            hotspot.info.style.display = showInfo ? 'block' : 'none';
         });
     }
 
@@ -1685,7 +1711,8 @@ class HotspotManager {
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
 
-        const pixelRatio = IS_MOBILE ? 1 : Math.min(window.devicePixelRatio, 2);
+        const isTablet = !IS_MOBILE && window.innerWidth >= 600 && window.innerWidth <= 1366;
+        const pixelRatio = (IS_MOBILE || isTablet) ? 1 : Math.min(window.devicePixelRatio, 2);
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(pixelRatio);
 

@@ -74,7 +74,7 @@
     "icon": "media/icon_E24_1.png",
     "iconVisited": "media/icon_E24_1_visited.png",
     "title": "Service Electrical Disconnect",
-    "description": "<div class='hotspot-title'>Service Electrical Disconnect</div><br><strong>Procedure:</strong>\nWhile standing clear of the electrical box, place the disconnect switch in the OFF position. Apply a safety lock and tag.\n\n<strong>Verify:</strong>\nAttempt to start the equipment and verify that no action occurs. Ensure zero voltage by testing with a voltmeter."
+    "description": "<div class='hotspot-title'>Service Electrical Disconnect</div><br><strong>Procedure:</strong>\nWhile standing clear of the electrical box, place the disconnect switch in the OFF position. Apply a safety lock and tag.\n\n<strong>Verify:</strong>\nAttempt to start equipment powered by this disconnect. The equipment must not start, and no action should occur. Ensure zero voltage by testing with a voltmeter."
   },
   {
     "node": "LOTO_E24_2",
@@ -84,7 +84,7 @@
     "icon": "media/icon_E24_2.png",
     "iconVisited": "media/icon_E24_2_visited.png",
     "title": "Case Coder Electrical Disconnect",
-    "description": "<div class='hotspot-title'>Case Coder Electrical Disconnect</div><br><strong>Procedure:</strong>\nRemove the plug from the receptacle. Install a plug lockout device and apply a safety lock and tag.\n\n<strong>Verify:</strong>\nAttempt to start equipment powered by this plug and verify that no action occurs. Ensure zero voltage before servicing."
+    "description": "<div class='hotspot-title'>Case Coder Electrical Disconnect</div><br><strong>Procedure:</strong>\nRemove the plug from the receptacle. Install a plug lockout device and apply a safety lock and tag.\n\n<strong>Verify:</strong>\nAttempt to start equipment powered by this disconnect. The equipment must not start, and no action should occur. Ensure zero voltage by testing with a voltmeter."
   },
   {
     "node": "LOTO_E24_3",
@@ -94,7 +94,7 @@
     "icon": "media/icon_E24_3.png",
     "iconVisited": "media/icon_E24_3_visited.png",
     "title": "Exit Conveyor Electrical Disconnect",
-    "description": "<div class='hotspot-title'>Exit Conveyor Electrical Disconnect</div><br><strong>Procedure:</strong>\nWhile standing clear of the electrical box, place the disconnect switch in the OFF position. Apply a safety lock and tag.\n\n<strong>Verify:</strong>\nAttempt to start the equipment and verify that no action occurs. Ensure zero voltage by testing with a voltmeter."
+    "description": "<div class='hotspot-title'>Exit Conveyor Electrical Disconnect</div><br><strong>Procedure:</strong>\nWhile standing clear of the electrical box, place the disconnect switch in the OFF position. Apply a safety lock and tag.\n\n<strong>Verify:</strong>\nAttempt to start equipment powered by this disconnect. The equipment must not start, and no action should occur. Ensure zero voltage by testing with a voltmeter."
   },
   {
     "node": "Hzrd_01_BurnHazard_1",
