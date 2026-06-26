@@ -4,7 +4,7 @@
 <head>
     <title>Line 11 Case Packer</title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
     <!-- <link rel="stylesheet" href="styles.css"> -->
     <link rel="icon" type="image/x-icon" href="favicon.ico">
@@ -12,15 +12,18 @@
 </head>
 
 <body>
-    <div class="top-header">
-        <img src="media/logo.png" alt="Logo" class="logo" />
-        <h1 class="header-title">Line 11 Case Packer</h1>
+    <div id="topLeftStack">
+        <div class="top-header">
+            <img src="media/logo.png" alt="Logo" class="logo" />
+            <h1 class="header-title">Line 11 Case Packer</h1>
+        </div>
+        <div id="modeLabel" class="mode-label" style="display:none"></div>
     </div>
+    <button id="headerToggleBtn" aria-label="Show/hide title"><img src="media/arrow_right.svg" alt=""></button>
     <div id="modeFilter" class="mode-filter">
         <button class="mode-btn" data-mode="LOTO">Lockout/Tagout</button>
         <button class="mode-btn" data-mode="safety">Safety Map</button>
     </div>
-    <div id="modeLabel" class="mode-label" style="display:none"></div>
 
     <div id="container"></div>
 
@@ -109,7 +112,6 @@
     </div>
 
     <div id="cameraControls"></div>
-    <button id="headerToggleBtn" aria-label="Show/hide title"><img src="media/arrow_right.svg" alt=""></button>
 
 
 

@@ -3,7 +3,12 @@
     "allow": [
       "Bash(node --input-type=module)",
       "Bash(python3 -c ' *)",
-      "Bash(grep -v \"//\\\\|console\\\\|1900\\\\|1932\\\\|900px\\\\|932px\")"
+      "Bash(grep -v \"//\\\\|console\\\\|1900\\\\|1932\\\\|900px\\\\|932px\")",
+      "Bash(aws s3 *)",
+      "Bash(npm run *)",
+      "Bash(git log *)",
+      "Bash(ls -la public/media/model/)",
+      "Bash(dir public/media/model/)"
     ]
   }
 }

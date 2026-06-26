@@ -21,13 +21,11 @@ let lastTime = performance.now();
 let fps = 60;
 
 window.addEventListener('error', (e) => {
-    console.error('💥 CRASH DETECTED:', e.message);
-    alert('CRASH: ' + e.message + ' at line ' + e.lineno);
+    console.error('Error:', e.message);
 });
 
 window.addEventListener('unhandledrejection', (e) => {
-    console.error('💥 PROMISE CRASH:', e.reason);
-    alert('PROMISE ERROR: ' + e.reason);
+    console.error('Unhandled rejection:', e.reason);
 });
 
 console.log('App loaded:', new Date().toISOString());
@@ -117,9 +115,13 @@ class HotspotManager {
         //this.camera.setFocalLength(50);
 
 
+        // Detect tablet before renderer creation so powerPreference can be set appropriately
+        const _isTablet = !IS_MOBILE && window.innerWidth >= 600 && window.innerWidth <= 1366;
+        const _isLowGPU = IS_MOBILE || _isTablet;
+
         // Highly optimized renderer
         this.renderer = new WebGLRenderer({
-            powerPreference: "high-performance",
+            powerPreference: _isLowGPU ? "default" : "high-performance",
             antialias: false, // SMAA via postprocessing handles AA — hardware MSAA would double the cost
             stencil: false,
             depth: true,
@@ -129,12 +131,10 @@ class HotspotManager {
         });
 
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        const _isTablet = !IS_MOBILE && window.innerWidth >= 600 && window.innerWidth <= 1366;
-        this.renderer.setPixelRatio((IS_MOBILE || _isTablet) ? 1 : Math.min(window.devicePixelRatio, 2));
+        this.renderer.setPixelRatio(_isLowGPU ? 1 : Math.min(window.devicePixelRatio, 2));
         this.renderer.outputColorSpace = SRGBColorSpace;
 
         // Conditional shadows and tone mapping — disable for mobile and tablets to reduce GPU load
-        const _isLowGPU = IS_MOBILE || (_isTablet);
         if (!_isLowGPU) {
             this.renderer.shadowMap.enabled = true;
             this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -146,13 +146,14 @@ class HotspotManager {
         }
         document.getElementById('container').appendChild(this.renderer.domElement);
 
-        // WebGL context loss: stop render loop to prevent shader errors, prompt reload
+        // WebGL context loss: stop render loop to prevent shader source errors on mobile/iPad
         this.renderer.domElement.addEventListener('webglcontextlost', (event) => {
             event.preventDefault();
             this._contextLost = true;
-            if (confirm('Graphics context lost. Reload to restore?')) {
-                window.location.reload();
-            }
+            const banner = document.createElement('div');
+            banner.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;font-family:sans-serif;gap:16px';
+            banner.innerHTML = '<p style="margin:0;font-size:16px">Graphics interrupted. Tap to reload.</p><button onclick="location.reload()" style="padding:12px 28px;border:none;border-radius:8px;background:#fff;color:#000;font-size:15px;cursor:pointer">Reload</button>';
+            document.body.appendChild(banner);
         }, false);
         this.renderer.domElement.addEventListener('webglcontextrestored', () => {
             this._contextLost = false;
@@ -186,43 +187,32 @@ class HotspotManager {
         directionalLight.shadow.camera.bottom = -25;
         directionalLight.shadow.normalBias = 0.02;
         this.scene.add(directionalLight);
-        //composer
-        // Setup composer only if not mobile
-        this.composer = new EffectComposer(this.renderer);
-        this.composer.addPass(new RenderPass(this.scene, this.camera));
-        // Postprocessing passes
-
-        // Create OutlineEffect
-        this.outlineEffect = new OutlineEffect(this.scene, this.camera, {
-            selection: [],
-            blendFunction: BlendFunction.ALPHA,
-            edgeStrength: 2,
-            pulseSpeed: 0.0,
-            visibleEdgeColor: new THREE.Color('#EF5337'), // Start transparent
-            hiddenEdgeColor: new THREE.Color('#EF5337'),
-            multisampling: 4,
-            // resolution: {
-            //     // width: window.innerWidth * Math.min(window.devicePixelRatio, 2),
-            //     // height: window.innerHeight * Math.min(window.devicePixelRatio, 2)
-            // },
-            resolution: { width: window.innerWidth / 2, height: window.innerHeight / 2 },
-
-            xRay: false,
-            // Edge detection settings
-            patternTexture: null,
-            kernelSize: 1,
-            blur: true,
-            edgeGlow: 0.0,
-            usePatternTexture: false
-        });
-        //SMAA
-        const smaaEffect = new SMAAEffect();
-        // Create effect pass with both outline and SMAA
-        const effectPass = new EffectPass(this.camera, this.outlineEffect, smaaEffect);
-        effectPass.renderToScreen = true;
-
-        //add effect pass to composer
-        this.composer.addPass(effectPass);
+        // Postprocessing: skip on mobile/tablet — shaders are the primary cause of WebGL context loss
+        const _skipPostFX = _isLowGPU;
+        if (!_skipPostFX) {
+            this.composer = new EffectComposer(this.renderer);
+            this.composer.addPass(new RenderPass(this.scene, this.camera));
+            this.outlineEffect = new OutlineEffect(this.scene, this.camera, {
+                selection: [],
+                blendFunction: BlendFunction.ALPHA,
+                edgeStrength: 2,
+                pulseSpeed: 0.0,
+                visibleEdgeColor: new THREE.Color('#EF5337'),
+                hiddenEdgeColor: new THREE.Color('#EF5337'),
+                multisampling: 4,
+                resolution: { width: window.innerWidth / 2, height: window.innerHeight / 2 },
+                xRay: false,
+                patternTexture: null,
+                kernelSize: 1,
+                blur: true,
+                edgeGlow: 0.0,
+                usePatternTexture: false
+            });
+            const smaaEffect = new SMAAEffect();
+            const effectPass = new EffectPass(this.camera, this.outlineEffect, smaaEffect);
+            effectPass.renderToScreen = true;
+            this.composer.addPass(effectPass);
+        }
 
         // Add floor disc
         const floorGeometry = new THREE.CircleGeometry(20, 48);
@@ -243,8 +233,9 @@ class HotspotManager {
         // Add controls
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true;
-        this.controls.dampingFactor = IS_MOBILE ? 0.1 : 0.15;
-        this.controls.zoomSpeed = 2.0;
+        this.controls.dampingFactor = IS_MOBILE ? 0.15 : 0.15;
+        this.controls.zoomSpeed = IS_MOBILE ? 1.5 : 2.0;
+        this.controls.rotateSpeed = IS_MOBILE ? 1.0 : 1.0;
         this.controls.enablePan = false;
         this.controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
         this.controls.mouseButtons.MIDDLE = THREE.MOUSE.DOLLY;
@@ -369,7 +360,7 @@ class HotspotManager {
             };
 
 
-            const modelPath = 'media/model/Line11CasePacker_v4.glb';
+            const modelPath = 'media/model/Line11CasePacker_v5.glb';
             console.log('Loading model from:', modelPath);
 
             // this.loader.load(modelPath, (gltf) => {
@@ -715,6 +706,13 @@ class HotspotManager {
                 hotspot.info.style.top = '';
             }
             hotspot.info.style.display = 'block';
+            // Check if the text-scroll area actually overflows and flag it
+            const textScroll = hotspot.info.querySelector('.text-scroll');
+            if (textScroll) {
+                setTimeout(() => {
+                    textScroll.classList.toggle('is-scrollable', textScroll.scrollHeight > textScroll.clientHeight);
+                }, 50);
+            }
         } else {
             hotspot.info.style.display = 'none';
             hotspot.info.classList.remove('active');
@@ -1489,10 +1487,15 @@ class HotspotManager {
             this.updateHotspotPositions();
             // Skip composer during camera animation — SMAA+outline at full rAF rate kills GPU mid-flight
             const hasOutline = !this._camAnim && this.outlineEffect?.selection.size > 0;
-            if (hasOutline) {
-                this.composer.render();
-            } else {
-                this.renderer.render(this.scene, this.camera);
+            try {
+                if (hasOutline) {
+                    this.composer.render();
+                } else {
+                    this.renderer.render(this.scene, this.camera);
+                }
+            } catch (e) {
+                // WebGL context lost mid-render (common on mobile/iPad under GPU pressure)
+                this._contextLost = true;
             }
             this.cameraChanged = false;
             this.needsUpdate = false;
@@ -1862,6 +1865,8 @@ class HotspotManager {
 
     setModeFilter(mode) {
         this.walkThroughMode = false;
+        const mobileStepNav = document.getElementById('mobileStepNav');
+        if (mobileStepNav) mobileStepNav.style.display = 'none';
         this.activeMode = this.activeMode === mode ? null : mode;
         this.activeHazardFilter = null;
 
@@ -2038,10 +2043,12 @@ class HotspotManager {
         if (p1) p1.style.display = panel === 1 ? 'flex' : 'none';
         if (p2) p2.style.display = panel === 2 ? 'flex' : 'none';
         document.getElementById('modeOverlay').style.display = 'flex';
+        document.body.classList.add('overlay-open');
     }
 
     hideOverlay() {
         document.getElementById('modeOverlay').style.display = 'none';
+        document.body.classList.remove('overlay-open');
         const modeIcon = document.getElementById('modeIcon');
         if (modeIcon) modeIcon.src = 'media/Grid_default.svg';
     }
@@ -2085,10 +2092,21 @@ class HotspotManager {
     }
 
     updateStepNavDisplay() {
+        // Reset all in-panel navs first
         document.querySelectorAll('.step-nav-arrows').forEach(nav => nav.style.display = 'none');
 
+        // Portrait mobile uses the bottom bar; landscape mobile uses in-panel (same as desktop)
+        const isPortraitMobile = IS_MOBILE && window.innerWidth <= window.innerHeight;
+
+        // Always keep the bottom bar hidden in landscape
+        if (!isPortraitMobile) {
+            const msn = document.getElementById('mobileStepNav');
+            if (msn) msn.style.display = 'none';
+        }
+
+        // Nothing to show if not in walk-through mode or no step hotspot selected
         if (!this.walkThroughMode || !this.selectedHotspot || this.selectedHotspot.data.step === undefined) {
-            if (IS_MOBILE) {
+            if (isPortraitMobile) {
                 const msn = document.getElementById('mobileStepNav');
                 if (msn) msn.style.display = 'none';
             }
@@ -2098,7 +2116,8 @@ class HotspotManager {
         const isLastStep = this.currentWalkStep === this.walkThroughSteps.length - 1;
         const stepText = `Step ${this.selectedHotspot.data.step} of ${this.walkThroughSteps.length}`;
 
-        if (IS_MOBILE) {
+        if (isPortraitMobile) {
+            // Portrait mobile: full-width bottom bar
             const msn = document.getElementById('mobileStepNav');
             if (msn) msn.style.display = 'flex';
             const prev = document.getElementById('mobileStepPrev');
@@ -2112,7 +2131,7 @@ class HotspotManager {
             return;
         }
 
-        // Desktop: update in-panel step nav
+        // Landscape mobile + desktop: in-panel step nav
         const stepNav = this.selectedHotspot.info.querySelector('.step-nav-arrows');
         if (!stepNav) return;
         stepNav.style.display = 'flex';
@@ -2149,14 +2168,27 @@ class HotspotManager {
             document.body.classList.remove('titles-revealed');
             if (toggleBtn) {
                 toggleBtn.style.display = 'flex';
+                toggleBtn.style.top = '';
                 toggleBtn.innerHTML = '<img src="media/arrow_right.svg" alt="">';
             }
             if (!this._headerToggleSetup && toggleBtn) {
                 this._headerToggleSetup = true;
+                const positionToggle = () => {
+                    const stack = document.getElementById('topLeftStack');
+                    if (stack && document.body.classList.contains('titles-revealed')) {
+                        toggleBtn.style.top = (stack.getBoundingClientRect().bottom + 8) + 'px';
+                    } else {
+                        toggleBtn.style.top = '';
+                    }
+                };
                 toggleBtn.addEventListener('click', () => {
                     const revealed = document.body.classList.toggle('titles-revealed');
-                    toggleBtn.innerHTML = revealed ? '<img src="media/arrow_left.svg" alt="">' : '<img src="media/arrow_right.svg" alt="">';
+                    toggleBtn.innerHTML = revealed
+                        ? '<img src="media/arrow_left.svg" alt="">'
+                        : '<img src="media/arrow_right.svg" alt="">';
+                    positionToggle();
                 });
+                window.addEventListener('resize', positionToggle);
             }
         } else {
             document.body.classList.remove('mode-active', 'titles-revealed');
