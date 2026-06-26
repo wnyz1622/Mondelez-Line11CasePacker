@@ -8,7 +8,9 @@
       "Bash(npm run *)",
       "Bash(git log *)",
       "Bash(ls -la public/media/model/)",
-      "Bash(dir public/media/model/)"
+      "Bash(dir public/media/model/)",
+      "PowerShell(Get-Item \"c:\\\\Users\\\\winni\\\\Documents\\\\GitHub\\\\Mondelez-Line11CasePacker\\\\public\\\\media\\\\model\\\\Line11CasePacker_v5.glb\" | Select-Object Name, @{N='Size\\(MB\\)';E={[math]::Round\\($_.Length/1MB, 2\\)}})",
+      "Bash(npx --yes @gltf-transform/cli@latest inspect \"public/media/model/Line11CasePacker_v5.glb\")"
     ]
   }
 }

@@ -69,6 +69,7 @@ class HotspotManager {
         this.raycaster = new THREE.Raycaster();
         this.tempVector = new THREE.Vector3();
         this.tempVector2 = new THREE.Vector3();
+        this._rayDir = new THREE.Vector3();
         this.tempMatrix = new THREE.Matrix4();
 
         this.hasLoggedRendererInfo = false;
@@ -121,7 +122,7 @@ class HotspotManager {
 
         // Highly optimized renderer
         this.renderer = new WebGLRenderer({
-            powerPreference: _isLowGPU ? "default" : "high-performance",
+            powerPreference: "high-performance",
             antialias: false, // SMAA via postprocessing handles AA — hardware MSAA would double the cost
             stencil: false,
             depth: true,
@@ -131,7 +132,7 @@ class HotspotManager {
         });
 
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(_isLowGPU ? 1 : Math.min(window.devicePixelRatio, 2));
+        this.renderer.setPixelRatio(_isLowGPU || IS_MOBILE ? 1 : Math.min(window.devicePixelRatio, 2));
         this.renderer.outputColorSpace = SRGBColorSpace;
 
         // Conditional shadows and tone mapping — disable for mobile and tablets to reduce GPU load
@@ -233,9 +234,9 @@ class HotspotManager {
         // Add controls
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true;
-        this.controls.dampingFactor = IS_MOBILE ? 0.15 : 0.15;
+        this.controls.dampingFactor = IS_MOBILE ? 0.25 : 0.15;
         this.controls.zoomSpeed = IS_MOBILE ? 1.5 : 2.0;
-        this.controls.rotateSpeed = IS_MOBILE ? 1.0 : 1.0;
+        this.controls.rotateSpeed = 1.0;
         this.controls.enablePan = false;
         this.controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
         this.controls.mouseButtons.MIDDLE = THREE.MOUSE.DOLLY;
@@ -381,8 +382,8 @@ class HotspotManager {
                     // Store meshIndex for each mesh so we can reference default material later
                     gltf.scene.traverse((obj) => {
                         if (obj.isMesh) {
-                            // boost metalness
-                            obj.material.envMapIntensity = 1.5;
+                            // boost metalness — lower on mobile to reduce GPU env-map sampling cost
+                            obj.material.envMapIntensity = IS_MOBILE ? 0.8 : 1.5;
                             obj.material.needsUpdate = true;
 
                             // make glass more transparent
@@ -402,6 +403,29 @@ class HotspotManager {
                             }
                         }
                     });
+
+                    // On mobile: halve all texture dimensions to reduce VRAM and GPU upload cost
+                    if (IS_MOBILE) {
+                        const seenTextures = new Set();
+                        gltf.scene.traverse((obj) => {
+                            if (!obj.isMesh) return;
+                            const mat = obj.material;
+                            const texSlots = ['map','normalMap','roughnessMap','metalnessMap','emissiveMap','aoMap','envMap'];
+                            texSlots.forEach((slot) => {
+                                const tex = mat[slot];
+                                if (!tex || !tex.image || seenTextures.has(tex.uuid)) return;
+                                seenTextures.add(tex.uuid);
+                                const img = tex.image;
+                                const w = Math.max(1, Math.floor((img.width || img.videoWidth || 512) / 2));
+                                const h = Math.max(1, Math.floor((img.height || img.videoHeight || 512) / 2));
+                                const c = document.createElement('canvas');
+                                c.width = w; c.height = h;
+                                c.getContext('2d').drawImage(img, 0, 0, w, h);
+                                tex.image = c;
+                                tex.needsUpdate = true;
+                            });
+                        });
+                    }
 
                     this.gltf = gltf;
 
@@ -1619,12 +1643,16 @@ class HotspotManager {
         // Include landscape phones/tablets (width<=900, landscape orientation)
         const isMobileView = viewW < 600 || viewH < 400 || (viewW > viewH && viewW <= 932);
 
+        // Touch devices don't hover — skip the per-hotspot :hover DOM query on mobile
+        const supportsHover = !isMobileView;
+
         this.hotspots.forEach((hotspot) => {
-            const worldPosition = new THREE.Vector3();
+            // Reuse scratch vectors instead of allocating per hotspot per frame (GC pressure on mobile)
+            const worldPosition = this.tempVector;
             hotspot.mesh.getWorldPosition(worldPosition);
 
-            // Project to screen coordinates
-            const screenPosition = worldPosition.clone().project(this.camera);
+            // Project to screen coordinates (in place — no clone)
+            const screenPosition = this.tempVector2.copy(worldPosition).project(this.camera);
             const isBehindCamera = screenPosition.z > 1;
             const isInView = screenPosition.x >= -1 && screenPosition.x <= 1 &&
                 screenPosition.y >= -1 && screenPosition.y <= 1;
@@ -1640,7 +1668,8 @@ class HotspotManager {
             if (skipOcclusion) {
                 isOccluded = false;
             } else if (shouldRaycast) {
-                const direction = worldPosition.clone().sub(this.camera.position).normalize();
+                // Use a separate scratch vector (_rayDir) — must not mutate worldPosition/screenPosition
+                const direction = this._rayDir.copy(worldPosition).sub(this.camera.position).normalize();
                 this.raycaster.set(this.camera.position, direction);
                 const intersects = this.raycaster.intersectObjects(this.interactiveMeshes, true)
                     .filter(hit => !hit.object.name.includes('M_Glass'));
@@ -1673,8 +1702,8 @@ class HotspotManager {
                 hotspot._lastY = y;
             }
 
-            // Handle info panel
-            const isHoverOnly = hotspot !== this.selectedHotspot && hotspot.element.matches(':hover');
+            // Handle info panel — :hover DOM query skipped on touch (mobile) where hover is meaningless
+            const isHoverOnly = supportsHover && hotspot !== this.selectedHotspot && hotspot.element.matches(':hover');
             const showInfo = shouldShow && (hotspot === this.selectedHotspot || isHoverOnly);
 
             // Position BEFORE display — avoids flash at 0,0 when left/top were cleared
@@ -1714,8 +1743,9 @@ class HotspotManager {
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
 
+        const isSmallViewport = window.innerWidth <= 932 || window.innerHeight <= 500;
         const isTablet = !IS_MOBILE && window.innerWidth >= 600 && window.innerWidth <= 1366;
-        const pixelRatio = (IS_MOBILE || isTablet) ? 1 : Math.min(window.devicePixelRatio, 2);
+        const pixelRatio = (IS_MOBILE || isTablet || isSmallViewport) ? 1 : Math.min(window.devicePixelRatio, 2);
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(pixelRatio);
 
