@@ -132,7 +132,7 @@ class HotspotManager {
         });
 
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(_isLowGPU || IS_MOBILE ? 1 : Math.min(window.devicePixelRatio, 2));
+        this.renderer.setPixelRatio(_isLowGPU || IS_MOBILE ? Math.min(window.devicePixelRatio, 2) : Math.min(window.devicePixelRatio, 3));
         this.renderer.outputColorSpace = SRGBColorSpace;
 
         // Conditional shadows and tone mapping — disable for mobile and tablets to reduce GPU load
@@ -251,7 +251,6 @@ class HotspotManager {
         //this.controls.maxAzimuthAngle = Math.PI;
         this.controls.enablePan = true; // Disable panning to keep focus on the model
         this.controls.target.y = 0; // Keep the orbit target at floor level
-        let controlsUpdateTimeout = null;
         this.controls.addEventListener('start', () => { this.isOrbiting = true; });
         this.controls.addEventListener('end', () => { this.isOrbiting = false; });
         // Keep target from going below floor
@@ -259,17 +258,8 @@ class HotspotManager {
             if (this.controls.target.y < -5.3) {
                 this.controls.target.y = -5.4;
             }
+            this.cameraChanged = true;
             this.controlsChanged = true;
-
-            // Throttle updates on mobile
-            if (IS_MOBILE) {
-                if (controlsUpdateTimeout) clearTimeout(controlsUpdateTimeout);
-                controlsUpdateTimeout = setTimeout(() => {
-                    this.cameraChanged = true;
-                }, 50);
-            } else {
-                this.cameraChanged = true;
-            }
         });
 
         // Setup loaders
@@ -361,7 +351,9 @@ class HotspotManager {
             };
 
 
-            const modelPath = 'media/model/Line11CasePacker_v5.glb';
+            const modelPath = IS_MOBILE
+                ? 'media/model/Line11CasePacker_v5.glb'
+                : 'media/model/Line11CasePacker_v5.glb';
             console.log('Loading model from:', modelPath);
 
             // this.loader.load(modelPath, (gltf) => {
@@ -1745,7 +1737,7 @@ class HotspotManager {
 
         const isSmallViewport = window.innerWidth <= 932 || window.innerHeight <= 500;
         const isTablet = !IS_MOBILE && window.innerWidth >= 600 && window.innerWidth <= 1366;
-        const pixelRatio = (IS_MOBILE || isTablet || isSmallViewport) ? 1 : Math.min(window.devicePixelRatio, 2);
+        const pixelRatio = IS_MOBILE ? Math.min(window.devicePixelRatio, 2) : (isTablet || isSmallViewport) ? 1 : Math.min(window.devicePixelRatio, 3);
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(pixelRatio);
 

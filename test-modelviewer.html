@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>model-viewer test</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      html, body { margin: 0; height: 100%; }
+      model-viewer { width: 100%; height: 100%; background: #f0f0f0; }
+    </style>
+  </head>
+  <body>
+    <!--
+      Point src at the SAME glb path your main app loads, so this is a true apples-to-apples test.
+      Adjust the relative path below to match where your GLB actually lives in this deployment.
+    -->
+    <model-viewer
+      src="media/model/Line11CasePacker_v5_mobile.glb"
+      ar ar-modes="webxr scene-viewer quick-look" camera-controls
+    tone-mapping="neutral"  shadow-intensity="1"
+  >
+    </model-viewer>
+
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.3.1/model-viewer.min.js"></script>
+  </body>
+</html>
